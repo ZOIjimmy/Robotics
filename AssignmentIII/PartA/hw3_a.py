@@ -19,7 +19,7 @@ resizeScale = 0.25
 fixWidth = 1008
 fixHeight = -1
 
-images = glob.glob('./original/*.jpg')
+images = glob.glob('./calibrate_src/*.jpg')
 for fname in images:
     img = cv2.imread(fname)
     h, w = img.shape[:2]
@@ -54,7 +54,7 @@ print("rvecs : ", rvecs)
 print("tvecs : ", tvecs)
 
 num = 0
-images = glob.glob('./original/*.jpg') + glob.glob('./input/*.jpg')
+images = glob.glob('./calibrate_src/*.jpg') + glob.glob('./input/*.jpg')
 for fname in images:    
     num += 1
     img = cv2.imread(fname)
