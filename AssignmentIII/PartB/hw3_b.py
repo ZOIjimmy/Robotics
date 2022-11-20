@@ -23,10 +23,11 @@ while True:
     plt.imshow(img)
     ax.set_title('Original image')
 
+    ori_img = img.copy()
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.GaussianBlur(img, (9, 9), 0)
     img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)[1]
-    contours, _ = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     # plot image after preprocess
     ax = fig.add_subplot(3, 2, 2)
@@ -56,14 +57,14 @@ while True:
         icY = int(cY)
         pa= 0.5 * math.atan2(2 * u11, u20 - u02)
         slope=math.tan(pa)
-        cv2.circle(img, (icX, icY), 7, (0, 0, 255), -1)
-        cv2.line(img, (icX, icY), (icX+300, (icY + int(300*slope))), (200, 0, 0), 1)
-        cv2.line(img, (icX, icY), (icX-300, (icY - int(300*slope))), (200, 0, 0), 1)
+        cv2.circle(ori_img, (icX, icY), 7, (0, 0, 255), -1)
+        cv2.line(ori_img, (icX, icY), (icX+300, (icY + int(300*slope))), (200, 0, 0), 1)
+        cv2.line(ori_img, (icX, icY), (icX-300, (icY - int(300*slope))), (200, 0, 0), 1)
         pa *= 180 / math.pi
         info_centroid_str += "("+str(round(cX, 4))+","+str(round(cY, 4))+"),  "
         info_angle_str += str(round(pa, 4)) + ",  "
 
-    result = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    result = cv2.cvtColor(ori_img, cv2.COLOR_BGR2RGB)
     info_centroid_str = info_centroid_str[:-3]
     info_angle_str = info_angle_str[:-3]
     print(info_centroid_str)
