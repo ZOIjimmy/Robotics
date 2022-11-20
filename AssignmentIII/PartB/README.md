@@ -1,5 +1,9 @@
 # Part B: Object Detection
 
+<p align="center">
+    <img src=docs/figure_1.png height=400px/>
+</p>
+
 ## Team member (team16):
 B09507016 鄭達郁
 
@@ -12,6 +16,8 @@ B09902037 薛尚齊
 ## How to run 
 1, ```pip install opencv-python matplotlib```
 
-2, ```python part_b.py``` (make sure the current directory is PartB)
+2, ```python hw3_b.py```
 
-3, Once start running, a window showing the calibrated image should pop up, press any key to see the next image.
+
+## Features
+- The program shows original image, image after preprocessing, contours of objects and the result image. The result image shows the centroid, principal angle and principle line of all the object(s).

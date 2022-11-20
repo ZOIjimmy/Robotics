@@ -1,16 +1,21 @@
 import cv2
 import math
+import os
 import matplotlib.pyplot as plt
 
-for t in range(4):
+while True:
+    print("enter filepath reletive to current working directory")
+    print("current working directory is " + os.getcwd())
+    print("example: ./images/er7-1.jpg")
+    filepath = input("filepath: ")
     fig = plt.figure()
-    fig.suptitle("Image " + str(t+1))
+    fig.suptitle("Image: " + os.path.basename(filepath))
     plt.subplots_adjust(
                     bottom=0,
                     wspace=0,
                     hspace=0.42)
 
-    img = cv2.imread("./images/er7-"+str(t+1)+".jpg")
+    img = cv2.imread(filepath)
     h, w = img.shape[:2]
 
     # plot original image
@@ -47,16 +52,16 @@ for t in range(4):
         u20 = M["m20"] / M["m00"] - cX ** 2
         u02 = M["m02"] / M["m00"] - cY ** 2
         u11 = M["m11"] / M["m00"] - cX * cY
-        cX = int(cX)
-        cY = int(cY)
+        icX = int(cX)
+        icY = int(cY)
         pa= 0.5 * math.atan2(2 * u11, u20 - u02)
         slope=math.tan(pa)
-        cv2.circle(img, (cX, cY), 7, (0, 0, 255), -1)
-        cv2.line(img, (cX, cY), (cX+300, (cY + int(300*slope))), (200, 0, 0), 1)
-        cv2.line(img, (cX, cY), (cX-300, (cY - int(300*slope))), (200, 0, 0), 1)
+        cv2.circle(img, (icX, icY), 7, (0, 0, 255), -1)
+        cv2.line(img, (icX, icY), (icX+300, (icY + int(300*slope))), (200, 0, 0), 1)
+        cv2.line(img, (icX, icY), (icX-300, (icY - int(300*slope))), (200, 0, 0), 1)
         pa *= 180 / math.pi
-        info_centroid_str += "("+str(cX)+","+str(cY)+"),  "
-        info_angle_str += str(round(pa, 3)) + ",  "
+        info_centroid_str += "("+str(round(cX, 4))+","+str(round(cY, 4))+"),  "
+        info_angle_str += str(round(pa, 4)) + ",  "
 
     result = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     info_centroid_str = info_centroid_str[:-3]
@@ -70,5 +75,7 @@ for t in range(4):
     ax.set_title('Result')
     plt.figtext(0.5, 0.15, info_centroid_str + "\n" + info_angle_str,
     ha="center", fontsize=10, bbox={"facecolor":"green", "alpha":0.5, "pad":5})
-
-plt.show()
+    plt.show(block=False)
+    reply = input('continue? (y/n): ').lower().strip()
+    if reply[0] == 'n':
+        break

@@ -20,7 +20,7 @@ B09902037 薛尚齊
 ## How to run 
 1, ```pip install opencv-python numpy```
 
-2, ```python part_a.py``` (make sure the current directory is PartA)
+2, ```python hw3_a.py``` (make sure the current directory is PartA)
 
 3, Once start running, a window showing the calibrated image should pop up, press any key to see the next image.
 
