@@ -20,6 +20,7 @@ fixWidth = 1008
 fixHeight = -1
 
 images = glob.glob('./calibrate_src/*.jpg')
+images.sort()
 for fname in images:
     img = cv2.imread(fname)
     h, w = img.shape[:2]
