@@ -1,4 +1,4 @@
 # Part A
-##link: [Part A: Camera Calibration](PartA/README.md)
+[Part A: Camera Calibration](PartA/)
 # Part B
-##link: [Part B: Object Detection](PartB/README.md)
+[Part B: Object Detection](PartB/)
