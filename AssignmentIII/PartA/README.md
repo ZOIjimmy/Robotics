@@ -1,6 +1,8 @@
 # Part A: Camera Calibration
 
-![Alt text](docs/figure_1.png?raw=true)
+<p align="center">
+    <img src=docs/figure_1.png height=400px/>
+</p>
 
 This program uses images of chess board under `calibrate_src` directory to calibrate our camera. Images under the `calibrate_src`  and the `input` directory will be calibrated and saved in the `output` directory.
 
