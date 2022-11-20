@@ -20,7 +20,7 @@ B09902037 薛尚齊
 ## How to run 
 1, ```pip install opencv-python numpy```
 
-2, ```python hw3_a.py```
+2, ```python part_a.py``` (make sure the current directory is PartA)
 
 3, Once start running, a window showing the calibrated image should pop up, press any key to see the next image.
 
@@ -28,6 +28,5 @@ B09902037 薛尚齊
 
 ## Features
 - The program checks that all images for calibrating the camera have the same aspect ratio, and resizes them to the same size.
-<br>
 
 - For images that are being calibrated, if their heights are greater than their widths, the program automatically rotate them 90 degrees to ensure optimal result.
