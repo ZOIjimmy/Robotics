@@ -4,7 +4,6 @@
     <img src=docs/figure_1.png height=400px/>
 </p>
 
-$nsbp$nsbp$nsbp$nsbp$nsbp
 This program uses images of chess board under `calibrate_src` directory to calibrate our camera. Images under the `calibrate_src`  and the `input` directory will be calibrated and saved in the `output` directory.
 
 Some sample outputs are shown in `sample_output` directory.
