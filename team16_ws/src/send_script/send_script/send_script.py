@@ -45,6 +45,7 @@ tvecs =  np.array([
     [[ 6.53025321], [-3.91689003], [54.78554231]],
     [[ 1.14725789], [-1.961374  ], [55.21853946]] ])
 
+##TODO fix
 def Calibrate(img):
     h, w = img.shape[:2]
     print(h, w)
@@ -65,36 +66,119 @@ def Calibrate(img):
     cv2.imwrite('./output/calibresult.jpg', dst)
     return dst
 
-
-
-
-
 def CalcCentroid(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.GaussianBlur(img, (9, 9), 0)
     img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)[1]
     _, contours, _ = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    xs, ys, pas = [], [], []
+    areas, xs, ys, pas = [], [], [], []
     for c in contours:
         area = cv2.contourArea(c)
+        areas.append(area)
         print("area=", area)
-        if area > 20000 or area < 1000: continue
         (x, y), (width, height), pa = cv2.minAreaRect(c)
         if width <= height:
             pa += 90
         angle = pa * math.pi / 180
+
+        # TODO this can maybe detect the teapot by rotating 180 degree
+        '''
+        mx, my = np.where(img >= 200)
+        cx = np.average(mx)
+        cy = np.average(my)
+        if (cy - y) / (cx - x) / math.tan(pa) < 0:
+            pa += 180
+        '''
+
         xs.append(x)
         ys.append(y)
         pas.append(pa)
-    return xs, ys, pas
+    return areas, xs, ys, pas
+
+def _open():
+    set_io(0.0)
+
+def _close():
+    set_io(1.0)
 
 def move(x, y, z, a, grip=-1):
     target = "%f, %f, %f, -180.00, 0.0, %f" % (x, y, z, a)
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
-    if grip >= 0: set_io(grip)
-    return
+    if grip >= 1: _open()
+    elif grip >= 0: _close()
+    time.sleep(1)
+
+def moveWithPot(x, y, z, a, b, c):
+    target = "%f, %f, %f, %f, %f, %f" % (x, y, z, a, b, c)
+    script = "PTP(\"CPP\","+target+",100,200,0,false)"
+    send_script(script)
+    _close()
+    time.sleep(1)
+
+def PourPot(ox, oy, oa):
+    move_h = 300.0
+    grab_h = 125.0
+    pour_h = 200.0
+    release_h = 125.0
+
+    ra = 90.0
+    rx = 300.0
+    ry = 300.0
+
+    ox += something * math.cos(oa)
+    oy += something * math.sin(oa)
+
+    move(ox, oy, move_h, oa, 0.0)
+    
+    # TODO fill the angles to grab the pot
+    a = 123
+    b = 456
+
+    moveWithPot(ox, oy, grab_h, a, b, oa)
+    moveWithPot(ox, oy, move_h, a, b, oa)
+    # TODO not sure how it works. maybe need to change ra
+    moveWithPot(rx, ry, move_h, a, b, ra)
+    moveWithPot(rx, ry, pour_h, a, b, ra)
+
+    # TODO pour water may be very buggy
+    t = 0 # loop
+    l = 1234 # length from gripper to tip of the pot
+    mx, my, mz, ma, mb = rx, ry, pour_h, a, b
+    for i in range(t):
+        moveWithPot(mx, my, mz, ma, mb, ra)
+        mx += math.cos(ra) * l
+        my += math.sin(ra) * l
+        mz += 1
+        # TODO
+        ma += 1234
+        mb += 1234
+
+    moveWithPot(rx, ry, pour_h, a, b, ra)
+    moveWithPot(rx, ry, move_h, a, b, ra)
+    moveWithPot(ox, oy, move_h, a, b, oa)
+    moveWithPot(ox, oy, release_h, a, b, oa)
+    
+    _open()
+    time.sleep(1)
+
+    move(rx, ry, move_h, ra)
+
+def StackCube(ox, oy, oa, release_h):
+    move_h = 300.0
+    grab_h = 125.0
+
+    ra = 90.0
+    rx = 300.0
+    ry = 300.0
+
+    move(ox, oy, move_h, oa, 0)
+    move(ox, oy, grab_h, oa, 1)
+    move(ox, oy, move_h, ra)
+    move(rx, ry, move_h, ra)
+    move(rx, ry, release_h, ra, 0)
+    move(rx, ry, move_h, ra)
 
 class ImageSub(Node):
     def __init__(self, nodeName):
@@ -106,14 +190,13 @@ class ImageSub(Node):
     def image_callback(self, data):
         self.get_logger().info('Received image')
 
-        global i
-        # TODO (write your code here)
         bridge = cv_bridge.CvBridge()
         img = bridge.imgmsg_to_cv2(data, data.encoding)
         k = cv2.imwrite('./output/'+str(i)+'.jpg', img)
         img = Calibrate(img)
-        xs, ys, angles = CalcCentroid(img)
+        areas, xs, ys, angles = CalcCentroid(img)
         
+        #TODO transformation matrix and scaling
         tm = [[0.7517, -0.6453, 215.3364], [-0.6939, -0.68, 572.6126], [0, 0, 1]]
         s =  0.3617993849
 
@@ -124,30 +207,23 @@ class ImageSub(Node):
             oxs.append(tm[0][0] * x * s + tm[0][1] * y * s + tm[0][2])
             oys.append(tm[1][0] * x * s + tm[1][1] * y * s + tm[1][2])
             oas.append(135 + 90 - angle)
-
-        move_h = 300.0
-        grab_h = 125.0
+        
+        # TODO change to 0 when all done
         release_h = 200.0
         object_h = 25.0
 
-        ra = 90.0
-        rx = 300.0
-        ry = 300.0
+        # TODO get object size
+        # cube_min = 
+        # cube_max = 
+        # pot_min = 
+        # pot_max = 
 
-        for ox, oy, oa in zip(oxs, oys, oas):
-            move(ox, oy, move_h, oa, 0.0)
-            time.sleep(1)
-            move(ox, oy, grab_h, oa, 1.0)
-            time.sleep(1)
-            move(ox, oy, move_h, ra)
-            time.sleep(1)
-            move(rx, ry, move_h, ra)
-            time.sleep(1)
-            move(rx, ry, release_h, ra, 0.0)
-            time.sleep(1)
-            move(rx, ry, move_h, ra)
-            time.sleep(1)
-            release_h += object_h
+        for a, ox, oy, oa in zip(areas, oxs, oys, oas):
+            # if a > cube_min and a < cube_max:
+                StackCube(ox, oy, oa, release_h)
+                release_h += object_h
+            # elif a > pot_min and a > pot_min:
+                # PourPot(ox, oy, oa)
 
 def send_script(script):
     arm_node = rclpy.create_node('arm')
@@ -178,8 +254,6 @@ def set_io(state):
     gripper_node.destroy_node()
 
 def main(args=None):
-    global i
-    i=9
     rclpy.init(args=args)
 
     #--- move command by joint angle ---#
