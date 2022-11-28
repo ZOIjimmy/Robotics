@@ -1,0 +1,25 @@
+[0.242s] Invoking command in '/home/robot/workspace2/team16_ws/src/send_script': PS1=(team16) \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ PYTHONPATH=/home/robot/workspace2/team16_ws/install/send_script/lib/python3.6/site-packages:${PYTHONPATH} _OLD_VIRTUAL_PS1=\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ /usr/bin/python3 setup.py egg_info --egg-base ../../build/send_script build --build-base /home/robot/workspace2/team16_ws/build/send_script/build install --prefix /home/robot/workspace2/team16_ws/install/send_script --record /home/robot/workspace2/team16_ws/build/send_script/install.log --single-version-externally-managed
+[0.459s] running egg_info
+[0.460s] writing ../../build/send_script/send_script.egg-info/PKG-INFO
+[0.460s] writing dependency_links to ../../build/send_script/send_script.egg-info/dependency_links.txt
+[0.460s] writing entry points to ../../build/send_script/send_script.egg-info/entry_points.txt
+[0.460s] writing requirements to ../../build/send_script/send_script.egg-info/requires.txt
+[0.461s] writing top-level names to ../../build/send_script/send_script.egg-info/top_level.txt
+[0.484s] reading manifest file '../../build/send_script/send_script.egg-info/SOURCES.txt'
+[0.485s] writing manifest file '../../build/send_script/send_script.egg-info/SOURCES.txt'
+[0.485s] running build
+[0.485s] running build_py
+[0.485s] copying send_script/send_script.py -> /home/robot/workspace2/team16_ws/build/send_script/build/lib/send_script
+[0.485s] running install
+[0.486s] running install_lib
+[0.486s] copying /home/robot/workspace2/team16_ws/build/send_script/build/lib/send_script/send_script.py -> /home/robot/workspace2/team16_ws/install/send_script/lib/python3.6/site-packages/send_script
+[0.487s] byte-compiling /home/robot/workspace2/team16_ws/install/send_script/lib/python3.6/site-packages/send_script/send_script.py to send_script.cpython-36.pyc
+[0.488s] running install_data
+[0.488s] running install_egg_info
+[0.490s] removing '/home/robot/workspace2/team16_ws/install/send_script/lib/python3.6/site-packages/send_script-0.0.0-py3.6.egg-info' (and everything under it)
+[0.490s] Copying ../../build/send_script/send_script.egg-info to /home/robot/workspace2/team16_ws/install/send_script/lib/python3.6/site-packages/send_script-0.0.0-py3.6.egg-info
+[0.490s] running install_scripts
+[0.503s] Installing img_sub script to /home/robot/workspace2/team16_ws/install/send_script/lib/send_script
+[0.503s] Installing send_script script to /home/robot/workspace2/team16_ws/install/send_script/lib/send_script
+[0.504s] writing list of installed files to '/home/robot/workspace2/team16_ws/build/send_script/install.log'
+[0.517s] Invoked command in '/home/robot/workspace2/team16_ws/src/send_script' returned '0': PS1=(team16) \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ PYTHONPATH=/home/robot/workspace2/team16_ws/install/send_script/lib/python3.6/site-packages:${PYTHONPATH} _OLD_VIRTUAL_PS1=\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ /usr/bin/python3 setup.py egg_info --egg-base ../../build/send_script build --build-base /home/robot/workspace2/team16_ws/build/send_script/build install --prefix /home/robot/workspace2/team16_ws/install/send_script --record /home/robot/workspace2/team16_ws/build/send_script/install.log --single-version-externally-managed

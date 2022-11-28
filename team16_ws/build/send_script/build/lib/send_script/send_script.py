@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from rclpy.node import Node
+# from rclpy.node import Node
 import rclpy
 import cv2
 import sys
@@ -7,99 +7,99 @@ sys.path.append('/home/robot/colcon_ws/install/tm_msgs/lib/python3.6/site-packag
 from tm_msgs.msg import *
 from tm_msgs.srv import *
 import time
-from sensor_msgs.msg import Image
-import cv_bridge
+# from sensor_msgs.msg import Image
+# import cv_bridge
 import math
-# arm client
+import numpy as np
+from .image_sub import ImageSub
 
-def CalcCentroid(img):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.GaussianBlur(img, (9, 9), 0)
-    img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)[1]
-    _, contours, _ = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    cxs, cys, pas = [], [], []
-    for c in contours:
-        M = cv2.moments(c)
-        if M["m00"] >= 1000:
-            cx = M["m10"] / M["m00"]
-            cy = M["m01"] / M["m00"]
-            u20 = M["m20"] / M["m00"] - cx ** 2
-            u02 = M["m02"] / M["m00"] - cy ** 2
-            u11 = M["m11"] / M["m00"] - cx * cy
-            cx = int(cx)
-            cy = int(cy)
-            cxs.append(cx)
-            cys.append(cy)
-            pa= 0.5 * math.atan2(2 * u11, u20 - u02)
-            pa *= 180 / math.pi
-            pas.append(pa)
-            gradient=math.tan(pa)
-            cv2.circle(img, (cx, cy), 7, (0, 0, 255), -1)
-            cv2.line(img, (cx, cy), (cx+300, (cy + int(300*gradient))), (200, 0, 0), 1)
-            cv2.line(img, (cx, cy), (cx-300, (cy - int(300*gradient))), (200, 0, 0), 1)
-            print("centroid = ("+str(cx)+","+str(cy)+")")
-            print("principle angle: "+str(pa))
-    return img, cxs, cys, pas
+
+def _open():
+    set_io(0.0)
+
+def _close():
+    set_io(1.0)
 
 def move(x, y, z, a, grip=-1):
     target = "%f, %f, %f, -180.00, 0.0, %f" % (x, y, z, a)
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
-    if grip >= 0: set_io(grip)
-    return
+    if grip >= 1: _close()
+    elif grip >= 0: _open()
+    time.sleep(1)
 
-class ImageSub(Node):
-    def __init__(self, nodeName):
-        super().__init__(nodeName)
-        self.subscription = self.create_subscription(Image, 
-        'techman_image', self.image_callback, 10)
-        self.subscription
+def moveWithPot(x, y, z, a, b, c):
+    target = "%f, %f, %f, %f, %f, %f" % (x, y, z, a, b, c)
+    script = "PTP(\"CPP\","+target+",100,200,0,false)"
+    send_script(script)
+    _close()
+    time.sleep(1)
+
+def PourPot(ox, oy, oa):
+    move_h = 300.0
+    grab_h = 125.0
+    pour_h = 200.0
+    release_h = 125.0
+
+    ra = 90.0
+    rx = 300.0
+    ry = 300.0
+
+    ox += something * math.cos(oa)
+    oy += something * math.sin(oa)
+
+    move(ox, oy, move_h, oa, 0.0)
     
-    def image_callback(self, data):
-        self.get_logger().info('Received image')
+    # TODO fill the angles to grab the pot
+    a = 123
+    b = 456
 
-        # TODO (write your code here)
-        bridge = cv_bridge.CvBridge()
-        img = bridge.imgmsg_to_cv2(data, data.encoding)
-        cv2.imwrite('./output.jpg', img)
-        img, cxs, cys, angles = CalcCentroid(img)
-        
-        tm = [[0.7517, -0.6453, 215.3364], [-0.6939, -0.68, 572.6126], [0, 0, 1]]
-        s =  0.3617993849
+    moveWithPot(ox, oy, grab_h, a, b, oa)
+    moveWithPot(ox, oy, move_h, a, b, oa)
+    # TODO not sure how it works. maybe need to change ra
+    moveWithPot(rx, ry, move_h, a, b, ra)
+    moveWithPot(rx, ry, pour_h, a, b, ra)
 
-        oxs = []
-        oys = []
-        oas = []
-        for cx, cy, angle in zip(cxs, cys, angles):
-            oxs.append(tm[0][0] * cx * s + tm[0][1] * cy * s + tm[0][2])
-            oys.append(tm[1][0] * cx * s + tm[1][1] * cy * s + tm[1][2])
-            oas.append(135 + 90 - angle)
+    # TODO pour water may be very buggy
+    t = 0 # loop
+    l = 1234 # length from gripper to tip of the pot
+    mx, my, mz, ma, mb = rx, ry, pour_h, a, b
+    for i in range(t):
+        moveWithPot(mx, my, mz, ma, mb, ra)
+        mx += math.cos(ra) * l
+        my += math.sin(ra) * l
+        mz += 1
+        # TODO
+        ma += 1234
+        mb += 1234
 
-        plane_h = 200.0
-        move_h = 300.0
-        grab_h = 125.0
-        release_h = 200.0
-        object_h = 25.0
+    moveWithPot(rx, ry, pour_h, a, b, ra)
+    moveWithPot(rx, ry, move_h, a, b, ra)
+    moveWithPot(ox, oy, move_h, a, b, oa)
+    moveWithPot(ox, oy, release_h, a, b, oa)
+    
+    _open()
+    time.sleep(1)
 
-        ra = 90.0
-        rx = 300.0
-        ry = 300.0
+    move(rx, ry, move_h, ra)
 
-        for ox, oy, oa in zip(oxs, oys, oas):
-            move(ox, oy, move_h, oa, 0.0)
-            time.sleep(1)
-            move(ox, oy, grab_h, oa, 1.0)
-            time.sleep(1)
-            move(ox, oy, move_h, ra)
-            time.sleep(1)
-            move(rx, ry, move_h, ra)
-            time.sleep(1)
-            move(rx, ry, release_h, ra, 0.0)
-            time.sleep(1)
-            move(rx, ry, move_h, ra)
-            time.sleep(1)
-            release_h += object_h
+def StackCube(ox, oy, oa, release_h):
+    move_h = 300.0
+    grab_h = 105.0
+
+    ra = 90.0
+    rx = 300.0
+    ry = 300.0
+
+    move(ox, oy, move_h, oa, 0)
+    move(ox, oy, grab_h, oa, 1)
+    move(ox, oy, move_h, ra)
+    move(rx, ry, move_h, ra)
+    move(rx, ry, release_h, ra, 0)
+    move(rx, ry, move_h, ra)
+
+##
 
 def send_script(script):
     arm_node = rclpy.create_node('arm')
@@ -129,8 +129,27 @@ def set_io(state):
     gripper_cli.call_async(io_cmd)
     gripper_node.destroy_node()
 
-def main(args=None):
 
+
+'''
+    can grip place : targetP2 = "200.00, 350, 50, -270.00, 0.0, 45.00"
+'''
+
+'''
+    +50 -50 +150->+200 -40 setTo40 setTo45
+'''
+
+def moveToTarget(x,y,z,a,b,c):
+    target = "{}, {}, {}, {}, {}, {}".format(str(x),str(y),str(z),str(a),str(b),str(c))
+    script = "PTP(\"CPP\","+target+",100,200,0,false)"
+    send_script(script)
+    return
+
+def moveToTakePhotoPlace():
+    moveToTarget(230,230,700,-180,0,135)
+
+
+def main(args=None):
     rclpy.init(args=args)
 
     #--- move command by joint angle ---#
@@ -142,32 +161,63 @@ def main(args=None):
     # Initial camera position for taking image (Please do not change the values)
     # For right arm: targetP1 = "230.00, 230, 730, -180.00, 0.0, 135.00"
     # For left  arm: targetP1 = "350.00, 350, 730, -180.00, 0.0, 135.00"
-    targetP1 = "230.00, 230, 750, -180.00, 0.0, 135.00"
-    targetP2 = "300.00, 100, 500, -180.00, 0.0, 135.00"
-    script1 = "PTP(\"CPP\","+targetP1+",100,200,0,false)"
-    script2 = "PTP(\"CPP\","+targetP2+",100,200,0,false)"
 
-    
 
-    send_script(script1)
+    # paras  =   x,   y ,  z ,up2dow down2right  rotate joint
+    targetP1 = "230, 230, 730, -180, 0, 135.00"
+
+
+    _open()
+    moveToTakePhotoPlace()
 
     send_script("Vision_DoJob(job1)")
     cv2.waitKey(1)
 
     node = ImageSub('image_sub')
-    rclpy.spin(node)
+    rclpy.spin_once(node)
+
+
+    release_h = 105.0
+    object_h = 25.0
+
+
+    for ox, oy, oa in zip(node.oxs, node.oys, node.oas):
+        StackCube(ox, oy, oa, release_h)
+        release_h += object_h
+        
+
+    moveToTakePhotoPlace()
+
+
+
+
+    # _open()
     
-    #send_script(script2)
+    # moveToTarget(0,350,60,-270,0,90)
+    # _close()
+
+    # time.sleep(10)
+
+    # moveToTarget(400,300,400,-270,0,45)
+
+    # moveToTarget(400,300,400,-230,0,45)
+
+
+
+
 
 # What does Vision_DoJob do? Try to use it...
-# -------------------------------------------------
 
-    #send_script("Vision_DoJob(job1)")
-    #cv2.waitKey(1)
-#--------------------------------------------------
-    
-    set_io(0.0)# 1.0: close gripper, 0.0: open gripper
-    #set_io(0.0)
+# -------------------------------------------------
+#     send_script("Vision_DoJob(job1)")
+#     cv2.waitKey(1)
+# #--------------------------------------------------
+#     node = ImageSub('image_sub')
+#     rclpy.spin(node)
+
+    # script = "PTP(\"CPP\","+targetP1+",100,200,0,false)"
+    # send_script(script)
+    # set_io(0.0)# 1.0: close gripper, 0.0: open gripper
 
     #rclpy.shutdown()
 

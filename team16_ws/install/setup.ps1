@@ -25,6 +25,7 @@ function _colcon_prefix_chain_powershell_source_script {
 _colcon_prefix_chain_powershell_source_script "/opt/ros/melodic\local_setup.ps1"
 _colcon_prefix_chain_powershell_source_script "/home/robot/catkin_ws/devel\local_setup.ps1"
 _colcon_prefix_chain_powershell_source_script "/opt/ros/dashing\local_setup.ps1"
+_colcon_prefix_chain_powershell_source_script "/home/robot/workspace2/team13_ws/install\local_setup.ps1"
 _colcon_prefix_chain_powershell_source_script "/home/robot/colcon_ws/install\local_setup.ps1"
 _colcon_prefix_chain_powershell_source_script "/home/robot/workspace2/team10_ws/install\local_setup.ps1"
 

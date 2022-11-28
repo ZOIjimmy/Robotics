@@ -10,6 +10,7 @@ setup.py
 ../../build/send_script/send_script.egg-info/zip-safe
 resource/send_script
 send_script/__init__.py
+send_script/image_sub.py
 send_script/image_sub_edited.py
 send_script/img_sub.py
 send_script/send_script.py

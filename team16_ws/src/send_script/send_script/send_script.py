@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from rclpy.node import Node
+# from rclpy.node import Node
 import rclpy
 import cv2
 import sys
@@ -7,94 +7,13 @@ sys.path.append('/home/robot/colcon_ws/install/tm_msgs/lib/python3.6/site-packag
 from tm_msgs.msg import *
 from tm_msgs.srv import *
 import time
-from sensor_msgs.msg import Image
-import cv_bridge
+# from sensor_msgs.msg import Image
+# import cv_bridge
 import math
 import numpy as np
-# arm client
+from .image_sub import ImageSub
 
 
-mtx = np.array(
-    [[2.65638724e+03,0.00000000e+00,7.07835421e+02],
-    [0.00000000e+00,2.65231835e+03,4.13485582e+02],
-    [0.00000000e+00,0.00000000e+00,1.00000000e+00]])
-
-dist = np.array([[-5.39169704e-01, 2.68456414e+01, 6.10568726e-03, 7.99300217e-03, -3.45321357e+02]])
-
-rvecs = np.array([
-    [[-0.0156484 ], [ 0.02297492], [ 1.17669228]], 
-    [[-0.04530588], [ 0.0285935 ], [ 0.4085406 ]], 
-    [[-0.01357472], [-0.00160925], [-0.03894093]],
-    [[-0.01395321], [-0.00513307], [-0.09189605]], 
-    [[-0.01256387], [-0.03150466], [ 0.37326597]],
-    [[-0.00760046], [-0.00351973], [-1.28859561]],
-    [[-0.04886651], [ 0.0038072 ], [ 0.43286323]],
-    [[ 0.05934489], [-0.25505039], [-0.48311125]],
-    [[ 0.02831089], [ 0.04348857], [ 1.24757135]],
-    [[-0.04936149], [ 0.02539492], [ 0.99237457]] ])
-
-tvecs =  np.array([
-    [[ 4.84412468], [ 1.6542452 ], [54.8366371 ]],
-    [[ 5.33773011e-02], [-2.88550399e+00], [ 5.52271690e+01]],
-    [[-10.70823692], [ -4.35786753], [ 55.09865108]],
-    [[-8.97989256], [ 1.97461715], [54.92068258]],
-    [[-5.89632849], [-5.2737655 ], [55.03205856]],
-    [[ 1.45182512], [ 6.58386009], [54.69241777]],
-    [[-3.08258252], [-0.29383626], [55.1114095 ]],
-    [[-14.08119309],[ -2.88373906],[ 53.99016936]],
-    [[ 6.53025321], [-3.91689003], [54.78554231]],
-    [[ 1.14725789], [-1.961374  ], [55.21853946]] ])
-
-##TODO fix
-def Calibrate(img):
-    h, w = img.shape[:2]
-    print(h, w)
-    #img = cv2.resize(img, (int(w*resizeScale), int(h*resizeScale)))
-    if h > w:
-        img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    h, w = img.shape[:2]
-    print(cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h)))
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
-
-    x, y, w, h = roi
-    print(x, y, h, w)
-    dst = dst[y:y+h, x:x+w]
-
-    cv2.imshow("undistorted img", dst)
-    cv2.waitKey(0)
-    cv2.imwrite('./output/calibresult.jpg', dst)
-    return dst
-
-def CalcCentroid(img):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.GaussianBlur(img, (9, 9), 0)
-    img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)[1]
-    _, contours, _ = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    areas, xs, ys, pas = [], [], [], []
-    for c in contours:
-        area = cv2.contourArea(c)
-        areas.append(area)
-        print("area=", area)
-        (x, y), (width, height), pa = cv2.minAreaRect(c)
-        if width <= height:
-            pa += 90
-        angle = pa * math.pi / 180
-
-        # TODO this can maybe detect the teapot by rotating 180 degree
-        '''
-        mx, my = np.where(img >= 200)
-        cx = np.average(mx)
-        cy = np.average(my)
-        if (cy - y) / (cx - x) / math.tan(pa) < 0:
-            pa += 180
-        '''
-
-        xs.append(x)
-        ys.append(y)
-        pas.append(pa)
-    return areas, xs, ys, pas
 
 def _open():
     set_io(0.0)
@@ -106,8 +25,8 @@ def move(x, y, z, a, grip=-1):
     target = "%f, %f, %f, -180.00, 0.0, %f" % (x, y, z, a)
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
-    if grip >= 1: _open()
-    elif grip >= 0: _close()
+    if grip >= 1: _close()
+    elif grip >= 0: _open()
     time.sleep(1)
 
 def moveWithPot(x, y, z, a, b, c):
@@ -167,7 +86,7 @@ def PourPot(ox, oy, oa):
 
 def StackCube(ox, oy, oa, release_h):
     move_h = 300.0
-    grab_h = 125.0
+    grab_h = 105.0
 
     ra = 90.0
     rx = 300.0
@@ -180,50 +99,7 @@ def StackCube(ox, oy, oa, release_h):
     move(rx, ry, release_h, ra, 0)
     move(rx, ry, move_h, ra)
 
-class ImageSub(Node):
-    def __init__(self, nodeName):
-        super().__init__(nodeName)
-        self.subscription = self.create_subscription(Image, 
-        'techman_image', self.image_callback, 10)
-        self.subscription
-    
-    def image_callback(self, data):
-        self.get_logger().info('Received image')
-
-        bridge = cv_bridge.CvBridge()
-        img = bridge.imgmsg_to_cv2(data, data.encoding)
-        k = cv2.imwrite('./output/'+str(i)+'.jpg', img)
-        img = Calibrate(img)
-        areas, xs, ys, angles = CalcCentroid(img)
-        
-        #TODO transformation matrix and scaling
-        tm = [[0.7517, -0.6453, 215.3364], [-0.6939, -0.68, 572.6126], [0, 0, 1]]
-        s =  0.3617993849
-
-        oxs = []
-        oys = []
-        oas = []
-        for x, y, angle in zip(xs, ys, angles):
-            oxs.append(tm[0][0] * x * s + tm[0][1] * y * s + tm[0][2])
-            oys.append(tm[1][0] * x * s + tm[1][1] * y * s + tm[1][2])
-            oas.append(135 + 90 - angle)
-        
-        # TODO change to 0 when all done
-        release_h = 200.0
-        object_h = 25.0
-
-        # TODO get object size
-        # cube_min = 
-        # cube_max = 
-        # pot_min = 
-        # pot_max = 
-
-        for a, ox, oy, oa in zip(areas, oxs, oys, oas):
-            # if a > cube_min and a < cube_max:
-                StackCube(ox, oy, oa, release_h)
-                release_h += object_h
-            # elif a > pot_min and a > pot_min:
-                # PourPot(ox, oy, oa)
+##
 
 def send_script(script):
     arm_node = rclpy.create_node('arm')
@@ -253,6 +129,26 @@ def set_io(state):
     gripper_cli.call_async(io_cmd)
     gripper_node.destroy_node()
 
+
+
+'''
+    can grip place : targetP2 = "200.00, 350, 50, -270.00, 0.0, 45.00"
+'''
+
+'''
+    +50 -50 +150->+200 -40 setTo40 setTo45
+'''
+
+def moveToTarget(x,y,z,a,b,c):
+    target = "{}, {}, {}, {}, {}, {}".format(str(x),str(y),str(z),str(a),str(b),str(c))
+    script = "PTP(\"CPP\","+target+",100,200,0,false)"
+    send_script(script)
+    return
+
+def moveToTakePhotoPlace():
+    moveToTarget(230,230,700,-180,0,135)
+
+
 def main(args=None):
     rclpy.init(args=args)
 
@@ -265,24 +161,63 @@ def main(args=None):
     # Initial camera position for taking image (Please do not change the values)
     # For right arm: targetP1 = "230.00, 230, 730, -180.00, 0.0, 135.00"
     # For left  arm: targetP1 = "350.00, 350, 730, -180.00, 0.0, 135.00"
-    targetP1 = "230.00, 230, 730, -180.00, 0.0, 135.00"
-    targetP2 = "230.00, 230, 700, -180.00, 0.0, 135.00"
 
-    script = "PTP(\"CPP\","+targetP2+",100,200,0,false)"
-    send_script(script)
-    set_io(0.0)# 1.0: close gripper, 0.0: open gripper
 
-# What does Vision_DoJob do? Try to use it...
-# -------------------------------------------------
+    # paras  =   x,   y ,  z ,up2dow down2right  rotate joint
+    targetP1 = "230, 230, 730, -180, 0, 135.00"
+
+
+    _open()
+    moveToTakePhotoPlace()
+
     send_script("Vision_DoJob(job1)")
     cv2.waitKey(1)
-#--------------------------------------------------
+
     node = ImageSub('image_sub')
-    rclpy.spin(node)
+    rclpy.spin_once(node)
+
+
+    release_h = 105.0
+    object_h = 25.0
+
+
+    for ox, oy, oa in zip(node.oxs, node.oys, node.oas):
+        StackCube(ox, oy, oa, release_h)
+        release_h += object_h
+        
+
+    moveToTakePhotoPlace()
+
+
+
+
+    # _open()
     
-    script = "PTP(\"CPP\","+targetP1+",100,200,0,false)"
-    send_script(script)
-    set_io(0.0)# 1.0: close gripper, 0.0: open gripper
+    # moveToTarget(0,350,60,-270,0,90)
+    # _close()
+
+    # time.sleep(10)
+
+    # moveToTarget(400,300,400,-270,0,45)
+
+    # moveToTarget(400,300,400,-230,0,45)
+
+
+
+
+
+# What does Vision_DoJob do? Try to use it...
+
+# -------------------------------------------------
+#     send_script("Vision_DoJob(job1)")
+#     cv2.waitKey(1)
+# #--------------------------------------------------
+#     node = ImageSub('image_sub')
+#     rclpy.spin(node)
+
+    # script = "PTP(\"CPP\","+targetP1+",100,200,0,false)"
+    # send_script(script)
+    # set_io(0.0)# 1.0: close gripper, 0.0: open gripper
 
     #rclpy.shutdown()
 
