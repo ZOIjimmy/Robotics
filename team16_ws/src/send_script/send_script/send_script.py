@@ -13,27 +13,18 @@ import math
 import numpy as np
 from .image_sub import ImageSub
 
-
-
 def _open():
     set_io(0.0)
 
 def _close():
     set_io(1.0)
 
-def move(x, y, z, a, grip=-1):
-    target = "%f, %f, %f, -180.00, 0.0, %f" % (x, y, z, a)
-    script = "PTP(\"CPP\","+target+",100,200,0,false)"
-    send_script(script)
-    if grip >= 1: _close()
-    elif grip >= 0: _open()
-    time.sleep(1)
-
-def moveWithPot(x, y, z, a, b, c):
+def move(x, y, z, a=-180, b=0, c=135, g=-1):
     target = "%f, %f, %f, %f, %f, %f" % (x, y, z, a, b, c)
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
-    _close()
+    if g >= 1: _close()
+    elif g >= 0: _open()
     time.sleep(1)
 
 def PourPot(ox, oy, oa):
@@ -49,24 +40,24 @@ def PourPot(ox, oy, oa):
     ox += something * math.cos(oa)
     oy += something * math.sin(oa)
 
-    move(ox, oy, move_h, oa, 0.0)
+    move(ox, oy, move_h, c=oa, g=0.0)
     
     # TODO fill the angles to grab the pot
     a = 123
     b = 456
 
-    moveWithPot(ox, oy, grab_h, a, b, oa)
-    moveWithPot(ox, oy, move_h, a, b, oa)
+    move(ox, oy, grab_h, a, b, oa, 1)
+    move(ox, oy, move_h, a, b, oa)
     # TODO not sure how it works. maybe need to change ra
-    moveWithPot(rx, ry, move_h, a, b, ra)
-    moveWithPot(rx, ry, pour_h, a, b, ra)
+    move(rx, ry, move_h, a, b, ra)
+    move(rx, ry, pour_h, a, b, ra)
 
     # TODO pour water may be very buggy
     t = 0 # loop
     l = 1234 # length from gripper to tip of the pot
     mx, my, mz, ma, mb = rx, ry, pour_h, a, b
     for i in range(t):
-        moveWithPot(mx, my, mz, ma, mb, ra)
+        move(mx, my, mz, ma, mb, ra, 1)
         mx += math.cos(ra) * l
         my += math.sin(ra) * l
         mz += 1
@@ -74,32 +65,30 @@ def PourPot(ox, oy, oa):
         ma += 1234
         mb += 1234
 
-    moveWithPot(rx, ry, pour_h, a, b, ra)
-    moveWithPot(rx, ry, move_h, a, b, ra)
-    moveWithPot(ox, oy, move_h, a, b, oa)
-    moveWithPot(ox, oy, release_h, a, b, oa)
+    move(rx, ry, pour_h, a, b, ra, 1)
+    move(rx, ry, move_h, a, b, ra)
+    move(ox, oy, move_h, a, b, oa)
+    move(ox, oy, release_h, a, b, oa)
     
     _open()
     time.sleep(1)
 
-    move(rx, ry, move_h, ra)
+    move(rx, ry, move_h, c=ra)
 
 def StackCube(ox, oy, oa, release_h):
     move_h = 300.0
-    grab_h = 105.0
+    grab_h = 100.0
 
     ra = 90.0
     rx = 300.0
     ry = 300.0
 
-    move(ox, oy, move_h, oa, 0)
-    move(ox, oy, grab_h, oa, 1)
-    move(ox, oy, move_h, ra)
-    move(rx, ry, move_h, ra)
-    move(rx, ry, release_h, ra, 0)
-    move(rx, ry, move_h, ra)
-
-##
+    move(ox, oy, move_h, c=oa, g=0)
+    move(ox, oy, grab_h, c=oa, g=1)
+    move(ox, oy, move_h, c=ra)
+    move(rx, ry, move_h, c=ra)
+    move(rx, ry, release_h, c=ra, g=0)
+    move(rx, ry, move_h, c=ra)
 
 def send_script(script):
     arm_node = rclpy.create_node('arm')
@@ -129,8 +118,6 @@ def set_io(state):
     gripper_cli.call_async(io_cmd)
     gripper_node.destroy_node()
 
-
-
 '''
     can grip place : targetP2 = "200.00, 350, 50, -270.00, 0.0, 45.00"
 '''
@@ -139,15 +126,9 @@ def set_io(state):
     +50 -50 +150->+200 -40 setTo40 setTo45
 '''
 
-def moveToTarget(x,y,z,a,b,c):
-    target = "{}, {}, {}, {}, {}, {}".format(str(x),str(y),str(z),str(a),str(b),str(c))
+def moveTo(target):
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
-    return
-
-def moveToTakePhotoPlace():
-    moveToTarget(230,230,700,-180,0,135)
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -162,13 +143,12 @@ def main(args=None):
     # For right arm: targetP1 = "230.00, 230, 730, -180.00, 0.0, 135.00"
     # For left  arm: targetP1 = "350.00, 350, 730, -180.00, 0.0, 135.00"
 
-
     # paras  =   x,   y ,  z ,up2dow down2right  rotate joint
     targetP1 = "230, 230, 730, -180, 0, 135.00"
-
+    photoTarget = "230, 230, 700, -180, 0, 135.00"
 
     _open()
-    moveToTakePhotoPlace()
+    moveTo(photoTarget)
 
     send_script("Vision_DoJob(job1)")
     cv2.waitKey(1)
@@ -176,20 +156,14 @@ def main(args=None):
     node = ImageSub('image_sub')
     rclpy.spin_once(node)
 
-
-    release_h = 105.0
+    release_h = 100.0
     object_h = 25.0
-
 
     for ox, oy, oa in zip(node.oxs, node.oys, node.oas):
         StackCube(ox, oy, oa, release_h)
         release_h += object_h
-        
 
-    moveToTakePhotoPlace()
-
-
-
+    moveTo(targetP1)
 
     # _open()
     
@@ -201,9 +175,6 @@ def main(args=None):
     # moveToTarget(400,300,400,-270,0,45)
 
     # moveToTarget(400,300,400,-230,0,45)
-
-
-
 
 
 # What does Vision_DoJob do? Try to use it...
