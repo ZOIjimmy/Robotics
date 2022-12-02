@@ -1,2 +1,6 @@
 *~
 .DS_Store
+
+/team16_ws/build
+/team16_ws/install
+/team16_ws/log/*

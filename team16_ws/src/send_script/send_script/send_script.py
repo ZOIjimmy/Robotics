@@ -43,7 +43,11 @@ def PourPot(ox, oy, oa):
     oy += something * math.sin(oa)
 
     move(ox, oy, move_h, c=oa, g=0.0)
+<<<<<<< HEAD
     return
+=======
+    
+>>>>>>> 881d34dd722a78e985d3225139265c9de2faf151
     # TODO fill the angles to grab the pot
     a = 123
     b = 456
@@ -131,6 +135,7 @@ def set_io(state):
 def moveTo(target):
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
+<<<<<<< HEAD
 
 def Atan(deltaX, deltaY):
     return math.atan(deltaY/deltaX) * 180 / math.pi
@@ -141,6 +146,8 @@ def lieDown(startX,startY,endX,endY):
     deltaX, deltaY = endX - startX, endY - startY
     move(endX, endY, grabH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)))
 
+=======
+>>>>>>> 881d34dd722a78e985d3225139265c9de2faf151
 
 def main(args=None):
     rclpy.init(args=args)
@@ -158,6 +165,7 @@ def main(args=None):
     # paras  =   x,   y ,  z ,up2dow down2right  rotate joint
     targetP1 = "230, 230, 730, -180, 0, 135.00"
     photoTarget = "230, 230, 700, -180, 0, 135.00"
+<<<<<<< HEAD
 
 
     # _open()
@@ -190,12 +198,18 @@ def main(args=None):
 
     # # release_h = 100.0
     # object_h = 25.0
+=======
+
+    _open()
+    moveTo(photoTarget)
+>>>>>>> 881d34dd722a78e985d3225139265c9de2faf151
 
     # for area, ox, oy, oa in zip(node.areas, node.oxs, node.oys, node.oas):
     #     if  area >= 10000 and area <= 50000:
     #         PourPot(ox, oy, oa)
 
 
+<<<<<<< HEAD
     # potHandleX, potHandleY = 0, 0
     # potTipX, potTipY = 0, 0
     # grabh = 50
@@ -209,6 +223,14 @@ def main(args=None):
     # for ox, oy, oa in zip(node.oxs, node.oys, node.oas):
     #     StackCube(ox, oy, oa, release_h)
     #     release_h += object_h
+=======
+    release_h = 100.0
+    object_h = 25.0
+
+    for ox, oy, oa in zip(node.oxs, node.oys, node.oas):
+        StackCube(ox, oy, oa, release_h)
+        release_h += object_h
+>>>>>>> 881d34dd722a78e985d3225139265c9de2faf151
 
     moveTo(targetP1)
 
