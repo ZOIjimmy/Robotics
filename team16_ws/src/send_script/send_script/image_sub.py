@@ -11,7 +11,7 @@ import math
 def CalcCentroid(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.GaussianBlur(img, (9, 9), 0)
-    img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)[1]
+    img = cv2.threshold(img, 50, 255, cv2.THRESH_BINARY)[1]
     _, contours, _ = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     areas, xs, ys, pas = [], [], [], []
@@ -24,20 +24,43 @@ def CalcCentroid(img):
             pa += 90
         angle = pa * math.pi / 180
 
-        # TODO this can maybe detect the teapot by rotating 180 degree
-        '''
-        mx, my = np.where(img >= 200)
-        cx = np.average(mx)
-        cy = np.average(my)
-        if (cy - y) / (cx - x) / math.tan(pa) < 0:
-            pa += math.pi
-        '''
+        # maybe calibrate
+        # x = (x-285)*0.94 + 285
+        # x = (y-285)*0.94 + 285
 
         xs.append(x)
         ys.append(y)
         pas.append(pa)
     return areas, xs, ys, pas
 
+def FindColorDots(img):
+    imghsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    lower_blue = np.array([90, 60, 80])
+    upper_blue = np.array([110, 255, 255])
+    mask_blue = cv2.inRange(imghsv, lower_blue, upper_blue)
+    _, contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    blue_dots = []
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area <= 50 or area >= 500:
+            continue
+        (x, y), (width, height), pa = cv2.minAreaRect(c)
+        blue_dots.append((x, y))
+        
+    lower_red = np.array([0, 100, 130])
+    upper_red = np.array([15, 255, 255])
+    mask_red = cv2.inRange(imghsv, lower_red, upper_red)
+    _, contours, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    red_dots = []
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area <= 50 or area >= 500:
+            continue
+        (x, y), (width, height), pa = cv2.minAreaRect(c)
+        red_dots.append((x, y))
+
+    return blue_dots, red_dots
+        
 class ImageSub(Node):
     def __init__(self, nodeName):
         super().__init__(nodeName)
@@ -45,13 +68,15 @@ class ImageSub(Node):
         'techman_image', self.image_callback, 10)
         self.subscription
         self.areas, self.oxs, self.oys, self.oas = [], [], [], []
+        self.blue, self.red = [], []
 
     def image_callback(self, data):
         self.get_logger().info('Received image')
 
         bridge = cv_bridge.CvBridge()
         img = bridge.imgmsg_to_cv2(data, data.encoding)
-        # k = cv2.imwrite('./output/calibrated.jpg', img)
+
+        # k = cv2.imwrite('./output/color/7.jpg', img)
 
         areas, xs, ys, angles = CalcCentroid(img)
         
@@ -62,5 +87,6 @@ class ImageSub(Node):
             oxs.append(tm[0][0] * x + tm[0][1] * y + tm[0][2])
             oys.append(tm[1][0] * x + tm[1][1] * y + tm[1][2])
             oas.append(135 + 90 - angle)
-        
         self.areas, self.oxs, self.oys, self.oas = areas, oxs, oys, oas
+
+        self.blue, self.red = FindColorDots(img)
