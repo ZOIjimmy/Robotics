@@ -31,14 +31,17 @@ def move(x, y, z, a=-180, b=0, c=135, g=-1):
 
 def StackCube(ox, oy, oa, release_h):
     move_h = 300.0
-    grab_h = 125.0
+    grab_h = 100.0
     rx, ry, ra = 300.0, 300.0, 90.0
 
     move(ox, oy, move_h, c=oa, g=0)
+    move(ox, oy, grab_h+25, c=oa, g=0)
     move(ox, oy, grab_h, c=oa, g=1)
+    move(ox, oy, move_h, c=ra)
     move(ox, oy, move_h, c=ra)
     move(rx, ry, move_h, c=ra)
     move(rx, ry, release_h, c=ra, g=0)
+    move(rx, ry, release_h+25, c=ra, g=0)
     move(rx, ry, move_h, c=ra)
 
 def send_script(script):
