@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # from rclpy.node import Node
+
+'''
+TODO_LIST
+4. accuracy problem (from graph, from calculation)
+'''
+
 import rclpy
 import cv2
 import sys
@@ -12,6 +18,9 @@ import time
 import math
 import numpy as np
 from .image_sub import ImageSub
+
+photoTarget = "230, 230, 700, -180, 0, 135.00"
+stack = []
 
 def _open():
     set_io(0.0)
@@ -26,25 +35,19 @@ def move(x, y, z, a=-180, b=0, c=135, g=-1):
     if g >= 1: _close()
     elif g >= 0: _open()
     time.sleep(1)
+    stack.append(target)
 
-def PourPot(handle, tip):
+def PourPot(handle, tip, material):
     move_h = 300.0
     grab_h = 300.0
     release_h = 125.0
     rx, ry, ra = 300.0, 300.0, 90.0
 
-'''
-    can grip place : targetP2 = "200.00, 350, 50, -270.00, 0.0, 45.00"
-'''
+        # can grip place : targetP2 = "200.00, 350, 50, -270.00, 0.0, 45.00"
+        # +50 -50 +150->+200 -40 setTo40 setTo45
 
-'''
-    +50 -50 +150->+200 -40 setTo40 setTo45
-'''
     _open()
-    lieDownAndGrab(tip[0], tip[1], handle[0], handle[1])
-    move(rx, ry, move_h, -270, 0, ra)
-
-    # TODO
+    lieDownAndGrab(tip[0], tip[1], handle[0], handle[1], material)
 
 def StackCube(ox, oy, oa, release_h):
     move_h = 300.0
@@ -90,19 +93,66 @@ def set_io(state):
 def moveTo(target):
     script = "PTP(\"CPP\","+target+",100,200,0,false)"
     send_script(script)
+    stack.append(target)
 
 def Atan(deltaX, deltaY):
     return math.atan(deltaY/deltaX) * 180 / math.pi
 
-def lieDownAndGrab(startX,startY,endX,endY):
+def lieDownAndGrab(startX,startY,endX,endY,material):
     # moveTo("230, 230, 700, -180, 0, 135.00")    # insurance
-    grabH = 200
+    
+    if material == "metal":
+        grabH = 61
+    elif material == "glass":
+        grabH = 40
+
     moveH = 300
     deltaX, deltaY = endX - startX, endY - startY
-    move(endX, endY, moveH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)), 0)
-    move(endX, endY, grabH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)))
+    move(endX, endY, moveH, -180, 0, 135, 0)
+    time.sleep(5)
+    move(endX, endY, moveH, -90, 180, 135, 0)
+
+    deltaX, deltaY = endX-startX, endY-startY
+    theta = 180 + (90.00 + Atan(deltaX,deltaY))
+    move(endX, endY, moveH, -90, 180, theta, 0)
+
+    time.sleep(5)
+    l = 115                                                           +5    #+5: 3Dpinrt
+    endX += l*deltaX/math.sqrt(deltaX**2+deltaY**2)
+    endY += l*deltaY/math.sqrt(deltaX**2+deltaY**2)
+    move(endX, endY, moveH, -90, 180, theta, 0)
+
+    # go down
+    move(endX, endY, grabH+50, -90, 180, theta)
+    move(endX, endY, grabH, -90, 180, theta)
+    time.sleep(5)
+
+    # grab
     _close()
-    move(endX, endY, moveH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)))
+    time.sleep(5)
+    move(endX, endY, 250, -90, 180, theta)
+    time.sleep(5)
+    potlength = 70
+    endX += potlength*deltaX/math.sqrt(deltaX**2+deltaY**2)
+    endY += potlength*deltaY/math.sqrt(deltaX**2+deltaY**2)
+    move(endX, endY, 250, -90, 180, theta)
+    move(endX, endY, 400, -90, 180, theta)
+    time.sleep(5)
+    move(endX, endY, 400, -40, 180, theta)
+    time.sleep(5)
+    _open()
+    # move(endX, endY, moveH, -180, 0, 135, 0)
+    # time.sleep(5)
+    # move(endX, endY, moveH, -90, 180, 135, 0)
+    # move(endX, endY, moveH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)), 0)
+    # move(endX, endY, grabH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)))
+    # _close()
+    # move(endX, endY, moveH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)))
+
+def returnForFree():
+    for i in range(len(stack)):
+        moveTo(stack[-i])
+        sleep(1)
 
 def takeAPicture():
     moveTo(photoTarget)
@@ -114,48 +164,32 @@ def takeAPicture():
 def main(args=None):
     rclpy.init(args=args)
 
-    #--- move command by joint angle ---#
-    # script = 'PTP(\"JPP\",45,0,90,0,90,0,35,200,0,false)'
-
-    #--- move command by end effector's pose (x,y,z,a,b,c) ---#
-    # targetP1 = "398.97, -122.27, 748.26, -179.62, 0.25, 90.12"s
-
-    # Initial camera position for taking image (Please do not change the values)
-    # For right arm: targetP1 = "230.00, 230, 730, -180.00, 0.0, 135.00"
-    # For left  arm: targetP1 = "350.00, 350, 730, -180.00, 0.0, 135.00"
-
-    # paras  =   x,   y ,  z ,up2dow down2right  rotate joint
     # constants
     targetP1 = "230, 230, 730, -180, 0, 135.00"
     photoTarget = "230, 230, 700, -180, 0, 135.00"
     release_h = 100.0
     object_h = 25.0
     offsetX, offsetY = 0 , 0
+    stack = []
 
-    # _open()
-    # moveTo("200.00, 350, 350, -270.00, 0.0, 45.00")
-    # moveTo("200.00, 350, 93, -270.00, 0.0, 45.00")
-    # _close()
-    # moveTo("200.00, 350, 250, -270.00, 0.0, 45.00")
-    # moveTo("200.00, 350, 250, -270.00, 180.0, 45.00")
-
-    # moveTo("200.00, 350, 300, -270.00, 0.0, 45.00")
-    # time.sleep(8)
-    # moveTo("200.00, 350, 160, -270.00, 0.0, 45.00")
-    # _close()
-    # moveTo("200.00, 350, 93, -270.00, 0.0, 45.00")
-
+    _open()
     node = takeAPicture()
     rclpy.spin_once(node)
 
     # pour pot
-    
+    print(node.blue, node.red, node.green)
     for blue in node.blue:
         for red in node.red:
-            dist = sqrt((blue[0]-red[0])**2 + (blue[1]-red[1])**2)
-            if dist >= 430 and dist <= 450:
+            dist = math.sqrt((blue[0]-red[0])**2 + (blue[1]-red[1])**2)
+            print("dist",dist)
+            if dist >= 200 and dist <= 250:
                 # metal one
-                PourPot(blue, red)
+                PourPot(blue, red, "metal")
+                return
+            if dist >= 100 and dist < 200:
+                # glass one
+                PourPot(blue, red, "glass")
+                return 
 
     # assignment4
 
@@ -164,10 +198,9 @@ def main(args=None):
     #         StackCube(ox+offsetX, oy+offsetY, oa, release_h)
     #         release_h += object_h
 
-    # moveTo(targetP1)
-    # _open()
-
-    #rclpy.shutdown()
+    returnForFree()
+    _open()
+    # rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
