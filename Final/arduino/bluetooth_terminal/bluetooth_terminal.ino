@@ -25,7 +25,7 @@ void loop() {
       message = messageBuffer;
       messageBuffer = "";
       Serial.print(message); // send to serial monitor
-      message = "You sent " + message;
+      message = "You sent " + message + "\n";
       BTSerial.print(message); // send back to bluetooth terminal
     }
   }

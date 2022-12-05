@@ -1,13 +1,13 @@
-# import serial
-# BTserial = serial.Serial('/dev/ttys003', 9600)
-# print(BTserial.name)
-# BTserial.flushInput()
+import serial
+BTserial = serial.Serial('/dev/ttys003', 9600)
+print(BTserial.name)
+BTserial.flushInput()
 
-# print(BTserial.writable())
-# BTserial.write(b'12345;')
+print(BTserial.writable())
+BTserial.write(b'12;')
 
-# print(BTserial.readline())
-# BTserial.close()
+print(BTserial.readline())
+BTserial.close()
 
 
 

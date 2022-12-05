@@ -14,41 +14,43 @@ class StartPage extends StatefulWidget {
 class _StartPageState extends State<StartPage> with TickerProviderStateMixin {
   static const double _sizeLaunchIcon = 300;
 
-  AnimationController? _catBoxController;
-  bool _isCatBoxAnimationEnd = false;
+  AnimationController? _controller;
+  bool _isAnimationEnd = false;
+  int cont = 0;
+  int targetCount = 3;
 
   @override
   void initState() {
     super.initState();
 
-    _catBoxController = AnimationController(vsync: this);
+    _controller = AnimationController(vsync: this);
   }
 
   @override
   void dispose() {
-    _catBoxController?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
-  // return Scaffold(
-  //   body: child,
-  //   backgroundColor: Colors.amber,
-  // );
-
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Stack(
-        alignment: Alignment.center,
-        children: [_buildOpacityImageLogo(), _buildLottieCatBox(context)],
+    return Scaffold(
+      backgroundColor: Colors.amber,
+      body: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [_buildOpacityImageLogo(), _buildLottie(context)],
+        ),
       ),
     );
     // _buildLaunchEventListener()
   }
 
   Widget _buildOpacityImageLogo() {
-    return Opacity(
-      opacity: _isCatBoxAnimationEnd ? 1 : 0,
+    return AnimatedOpacity(
+      opacity: _isAnimationEnd ? 1 : 0,
+      duration: const Duration(milliseconds: 1000),
+      onEnd: () => {},
       child: Hero(
         tag: StartPage.tag,
         child: Image.asset(
@@ -60,21 +62,28 @@ class _StartPageState extends State<StartPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildLottieCatBox(BuildContext context) {
-    if (_isCatBoxAnimationEnd) {
+  Widget _buildLottie(BuildContext context) {
+    if (_isAnimationEnd) {
       return const SizedBox.shrink();
     }
 
-    final controller = _catBoxController;
+    final controller = _controller;
     if (controller == null) {
       return const SizedBox.shrink();
     }
 
-    _catBoxController?.addStatusListener((status) {
+    _controller?.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        setState(() {
-          _isCatBoxAnimationEnd = true;
-        });
+        // print('Animation ${cont + 1} completed. ');
+        cont++;
+        if (cont < targetCount) {
+          _controller!.reset();
+          _controller!.forward();
+        } else {
+          setState(() {
+            _isAnimationEnd = true;
+          });
+        }
       }
     });
 
@@ -85,7 +94,6 @@ class _StartPageState extends State<StartPage> with TickerProviderStateMixin {
       controller
         ..duration = composition.duration
         ..forward();
-      // ..repeat(max: 3, period: composition.duration * 2);
     });
   }
 }
