@@ -10,7 +10,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _selectedTab = ValueNotifier(HomeTabs.order);
+  final _selectedTab = ValueNotifier(HomeTabs.menuList);
 
   List<IconData> tapIcons = [
     Icons.home_rounded,
@@ -48,7 +48,6 @@ class _HomePageState extends State<HomePage> {
       items: const <Widget>[
         Icon(Icons.add, size: 30),
         Icon(Icons.list, size: 30),
-        Icon(Icons.compare_arrows, size: 30),
       ],
       onTap: (index) {
         //Handle button tap

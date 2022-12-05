@@ -74,7 +74,7 @@ class _StartPageState extends State<StartPage> with TickerProviderStateMixin {
 
     _controller?.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        print('Animation ${cont + 1} completed. ');
+        // print('Animation ${cont + 1} completed. ');
         cont++;
         if (cont < targetCount) {
           _controller!.reset();

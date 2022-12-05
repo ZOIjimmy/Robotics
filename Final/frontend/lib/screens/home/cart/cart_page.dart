@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/model/product.dart';
-import 'package:frontend/screens/home/empty_cart.dart';
+import 'package:frontend/screens/home/cart/empty_cart.dart';
 
 // final ProductController controller = Get.put(ProductController());
 

@@ -1,10 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/feature.dart';
+import 'package:frontend/components/popular.dart';
 import 'package:frontend/components/text_box.dart';
+import 'package:frontend/data/model/product.dart';
 import 'package:frontend/screens/home/components/notification.dart';
+import 'package:frontend/screens/home/item/item_detail.dart';
+
+import 'package:http/http.dart' as http;
 
 class MenuPage extends StatelessWidget {
-  const MenuPage({Key? key}) : super(key: key);
+  MenuPage({Key? key}) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -31,11 +37,11 @@ class MenuPage extends StatelessWidget {
           ],
         ),
       ),
-      body: _buildMain(),
+      body: buildMain(context),
     );
   }
 
-  Widget _buildMain() {
+  Widget buildMain(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,13 +82,6 @@ class MenuPage extends StatelessWidget {
                     ))),
           ),
           SizedBox(
-            height: 25,
-          ),
-          Container(
-            margin: EdgeInsets.only(left: 0),
-            child: Text("listCategories()"),
-          ),
-          SizedBox(
             height: 20,
           ),
           Container(
@@ -91,7 +90,7 @@ class MenuPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Popular",
+                  "Recent",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 Text(
@@ -105,7 +104,7 @@ class MenuPage extends StatelessWidget {
             height: 5,
           ),
           Container(
-            child: Text("listPopulars()"),
+            child: listPopulars(),
           ),
           SizedBox(
             height: 20,
@@ -122,13 +121,88 @@ class MenuPage extends StatelessWidget {
           ),
           Container(
             margin: EdgeInsets.only(left: 15, right: 15),
-            child: Text("listFeatured()"),
+            child: listFeatured(context),
           ),
           SizedBox(
             height: 20,
           ),
         ],
       ),
+    );
+  }
+
+  final recent = [
+    {"name": "test", "image": "test", "price": "price"},
+    {"name": "test", "image": "test", "price": "price"}
+  ];
+
+  listPopulars() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.only(left: 15),
+      child: Row(
+        children: List.generate(
+            recent.length, (index) => PopularItem(data: recent[index])),
+      ),
+    );
+  }
+
+  final featured = [
+    {
+      "name": "test",
+      "image": "test",
+      "sources": "",
+      "rate": "",
+      "rate_number": "",
+      "price": "price"
+    },
+    {
+      "name": "test",
+      "image": "test",
+      "sources": "",
+      "rate": "",
+      "rate_number": "",
+      "price": "price"
+    }
+  ];
+
+  final List<Product> productList = [
+    Product(
+        name: "name",
+        price: 300,
+        about: "about",
+        isAvailable: true,
+        off: 0,
+        quantity: 10,
+        images: [""],
+        isLiked: false,
+        rating: 3.0,
+        type: ProductType.mobile),
+  ];
+
+  listFeatured(BuildContext context) {
+    return Column(
+      children: List.generate(
+          featured.length,
+          (index) => FeaturedItem(
+                data: featured[index],
+                onTap: () async {
+                  print("send http");
+                  final url = Uri.parse('http://linux9.csie.ntu.edu.tw:13751');
+                  try {
+                    final response = await http.get(url);
+                    print(response);
+                    print(response.body);
+                  } catch (e) {
+                    print(e.runtimeType);
+                  }
+                  // Navigator.of(context).push(
+                  //   MaterialPageRoute(
+                  //     builder: (context) => ItemPage(productList[0]),
+                  //   ),
+                  // );
+                },
+              )),
     );
   }
 }
