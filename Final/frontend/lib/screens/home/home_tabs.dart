@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/home/cart_page.dart';
 import 'package:frontend/screens/home/menu_page.dart';
 
 enum HomeTabs {
@@ -21,7 +22,16 @@ extension MainTabsExt on HomeTabs {
       case HomeTabs.menuList:
         return const MenuPage();
       case HomeTabs.order:
-        return const MenuPage();
+        return CartPage();
+    }
+  }
+
+  MaterialColor getColor() {
+    switch (this) {
+      case HomeTabs.menuList:
+        return Colors.amber;
+      case HomeTabs.order:
+        return Colors.cyan;
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/text_box.dart';
 import 'package:frontend/screens/home/components/notification.dart';
 
 class MenuPage extends StatelessWidget {
@@ -24,7 +25,7 @@ class MenuPage extends StatelessWidget {
                       Icons.clear_all_rounded,
                       size: 28,
                     ))),
-            NotificationBox(
+            const NotificationBox(
               number: 1,
             )
           ],
@@ -39,26 +40,27 @@ class MenuPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
           Container(
-            margin: EdgeInsets.only(left: 15, right: 15),
-            child: Text(
+            margin: const EdgeInsets.only(left: 15, right: 15),
+            child: const Text(
               "Find Your Meals",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Container(
               margin: EdgeInsets.only(left: 15, right: 15),
-              child: Text("""CustomTextBox(
+              child: CustomTextBox(
                   hint: "Search",
-                  prefix: Icon(Icons.search, color: darker),
-                  suffix: Icon(Icons.filter_list_outlined, color: primary)))""")),
-          SizedBox(
+                  prefix: Icon(Icons.search, color: Colors.black),
+                  suffix:
+                      Icon(Icons.filter_list_outlined, color: Colors.black))),
+          const SizedBox(
             height: 25,
           ),
           Container(

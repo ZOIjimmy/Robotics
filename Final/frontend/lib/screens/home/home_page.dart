@@ -10,7 +10,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _selectedTab = ValueNotifier(HomeTabs.menuList);
+  final _selectedTab = ValueNotifier(HomeTabs.order);
 
   List<IconData> tapIcons = [
     Icons.home_rounded,
@@ -25,20 +25,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildScaffold() {
-    return Scaffold(
-      backgroundColor: Colors.amber,
-      extendBody: true,
-      bottomNavigationBar: _buildBottomNavBar(),
-      body: SafeArea(
-        child: ValueListenableBuilder<HomeTabs>(
-          valueListenable: _selectedTab,
-          builder: (context, tab, _) {
-            return Column(
+    return ValueListenableBuilder<HomeTabs>(
+      valueListenable: _selectedTab,
+      builder: (context, tab, _) {
+        return Scaffold(
+          backgroundColor: tab.getColor(),
+          extendBody: true,
+          bottomNavigationBar: _buildBottomNavBar(),
+          body: SafeArea(
+            child: Column(
               children: [Expanded(child: tab.getPage())],
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
