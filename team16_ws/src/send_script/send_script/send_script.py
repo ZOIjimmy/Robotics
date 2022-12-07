@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # from rclpy.node import Node
 
-'''
-TODO_LIST
-4. accuracy problem (from graph, from calculation)
-'''
-
 import rclpy
 import cv2
 import sys
@@ -18,6 +13,8 @@ import time
 import math
 import numpy as np
 from .image_sub import ImageSub
+from .image_find_dots import FindDots
+from .image_find_cup import FindCup
 
 photoTarget = "230, 230, 700, -180, 0, 135.00"
 stack = []
@@ -47,7 +44,8 @@ def PourPot(handle, tip, material):
         # +50 -50 +150->+200 -40 setTo40 setTo45
 
     _open()
-    lieDownAndGrab(tip[0], tip[1], handle[0], handle[1], material)
+    endX, endY, endZ, l, deltaX, deltaY = lieDownAndGrab(tip[0], tip[1], handle[0], handle[1], material)
+    Pouring(endX,endY,endZ,200,deltaX,deltaY)
 
 def StackCube(ox, oy, oa, release_h):
     move_h = 300.0
@@ -106,6 +104,10 @@ def lieDownAndGrab(startX,startY,endX,endY,material):
     elif material == "glass":
         grabH = 40
 
+    # for test
+    grabH = 150
+    # for test
+
     moveH = 300
     deltaX, deltaY = endX - startX, endY - startY
     move(endX, endY, moveH, -180, 0, 135, 0)
@@ -124,14 +126,21 @@ def lieDownAndGrab(startX,startY,endX,endY,material):
 
     # go down
     move(endX, endY, grabH+50, -90, 180, theta)
-    move(endX, endY, grabH, -90, 180, theta)
+    move(endX, endY, grabH, -90, 180, theta, 1)
+    print("closing\n")
     time.sleep(5)
 
+    endZ = 250
+
     # grab
-    _close()
     time.sleep(5)
-    move(endX, endY, 250, -90, 180, theta)
+    move(endX, endY, endZ, -90, 180, theta)
     time.sleep(5)
+
+    move(endX, endY, endZ, -90, 180, 225)
+    return  endX,endY,endZ,l,deltaX,deltaY
+
+    ''' pour template
     potlength = 70
     endX += potlength*deltaX/math.sqrt(deltaX**2+deltaY**2)
     endY += potlength*deltaY/math.sqrt(deltaX**2+deltaY**2)
@@ -140,7 +149,37 @@ def lieDownAndGrab(startX,startY,endX,endY,material):
     time.sleep(5)
     move(endX, endY, 400, -40, 180, theta)
     time.sleep(5)
-    _open()
+    '''
+    
+
+def Pouring(endX,endY,endZ,l,deltaX,deltaY,pouringTheta=45,SAMPLE_POINTS=4):
+    # endX, endY = 200, 400
+    # endZ = 170
+    theta = -90
+    # deltaX, deltaY = 100, -100
+    l = 200                                                          +5    #+5: 3Dpinrt
+    # endX += l*deltaX/math.sqrt(deltaX**2+deltaY**2)
+    # endY += l*deltaY/math.sqrt(deltaX**2+deltaY**2)
+    move(endX,endY,endZ,-90,180,225)
+    deltaTh = pouringTheta
+    deltaZ = math.sin(deltaTh*math.pi/180)*l                        *1.1
+    deltaXY = (1-math.cos(deltaTh*math.pi/180))*l/math.sqrt(2)
+    print(deltaTh,deltaXY,deltaZ)
+    for j in range(SAMPLE_POINTS):
+        i = j + 1
+        endX += (deltaXY/SAMPLE_POINTS)
+        endY -= (deltaXY/SAMPLE_POINTS)
+        endZ += (deltaZ/SAMPLE_POINTS)
+        theta += (deltaTh/SAMPLE_POINTS)
+        print("theta",theta)
+        move(endX,endY,endZ,theta,180,225)
+    # move(endX+deltaXY,endY-deltaXY,endZ+deltaZ,-90+deltaTh,180,225)
+    time.sleep(2)
+    move(endX,endY,endZ,-90,180,225)
+
+
+
+    # _open()
     # move(endX, endY, moveH, -180, 0, 135, 0)
     # time.sleep(5)
     # move(endX, endY, moveH, -90, 180, 135, 0)
@@ -149,17 +188,34 @@ def lieDownAndGrab(startX,startY,endX,endY,material):
     # _close()
     # move(endX, endY, moveH, -270.00, 0.0, 180 + (90.00 + Atan(deltaX,deltaY)))
 
+
 def returnForFree():
     for i in range(len(stack)):
         moveTo(stack[-i])
-        sleep(1)
+        time.sleep(1)
 
 def takeAPicture():
     moveTo(photoTarget)
     _open()
     send_script("Vision_DoJob(job1)")
     cv2.waitKey(1)
-    return ImageSub('image_sub')
+    node = FindDots('find_dots')
+    rclpy.spin_once(node)
+    return node
+
+def findCup():
+    findCupPhotoTargetPt = np.array([500, -160])
+    photoTargetPt = np.array([230, 230])
+    deltaVec = findCupPhotoTargetPt - photoTargetPt
+    print(deltaVec)
+    findCupPhotoTarget = str(findCupPhotoTargetPt[0]) + ", " + str(findCupPhotoTargetPt[1]) + ", 700, -180, 0, 135.00"
+    moveTo(findCupPhotoTarget)
+    _open()
+    send_script("Vision_DoJob(job1)")
+    cv2.waitKey(1)
+    node = FindCup('find_cup', deltaVec)
+    rclpy.spin_once(node)
+    return node
 
 def main(args=None):
     rclpy.init(args=args)
@@ -172,24 +228,31 @@ def main(args=None):
     offsetX, offsetY = 0 , 0
     stack = []
 
+    # time.sleep(2)
+
+        # move(endX+deltaXY/SAMPLE_POINTS*i,endY-deltaXY/SAMPLE_POINTS*i,280,-90,180,225)
+        # move(endX+deltaXY/SAMPLE_POINTS*i,endY-deltaXY/SAMPLE_POINTS*i,280,-60,180,225)
+
+    # move(endX+deltaXY,endY-deltaXY,150+deltaZ,-60,180,225)
+
+
     _open()
     node = takeAPicture()
-    rclpy.spin_once(node)
 
-    # pour pot
-    print(node.blue, node.red, node.green)
-    for blue in node.blue:
-        for red in node.red:
-            dist = math.sqrt((blue[0]-red[0])**2 + (blue[1]-red[1])**2)
-            print("dist",dist)
-            if dist >= 200 and dist <= 250:
-                # metal one
-                PourPot(blue, red, "metal")
-                return
-            if dist >= 100 and dist < 200:
-                # glass one
-                PourPot(blue, red, "glass")
-                return 
+    # # pour pot
+    # print(node.blue, node.red, node.green)
+    # for green in node.green:
+    #     for red in node.red:
+    #         dist = math.sqrt((green[0]-red[0])**2 + (green[1]-red[1])**2)
+    #         print("dist",dist)
+    #         if dist >= 180 and dist <= 250:
+    #             # metal one
+    #             PourPot(green, red, "metal")
+    #             return
+            # if dist >= 100 and dist < 180:
+            #     # glass one
+            #     PourPot(blue, red, "glass")
+            #     return 
 
     # assignment4
 
@@ -198,8 +261,8 @@ def main(args=None):
     #         StackCube(ox+offsetX, oy+offsetY, oa, release_h)
     #         release_h += object_h
 
-    returnForFree()
-    _open()
+    # returnForFree()
+    # _open()
     # rclpy.shutdown()
 
 if __name__ == '__main__':
