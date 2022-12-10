@@ -152,7 +152,7 @@ def lieDownAndGrab(startX,startY,endX,endY,material):
     '''
     
 
-def Pouring(endX,endY,endZ,l,deltaX,deltaY,pouringTheta=45,SAMPLE_POINTS=4):
+def Pouring(endX=200,endY=400,endZ=170,l=200,deltaX=100,deltaY=-100,pouringTheta=45,SAMPLE_POINTS=4):
     # endX, endY = 200, 400
     # endZ = 170
     theta = -90
@@ -196,7 +196,7 @@ def returnForFree():
 
 def takeAPicture():
     moveTo(photoTarget)
-    _open()
+    # _open()
     send_script("Vision_DoJob(job1)")
     cv2.waitKey(1)
     node = FindDots('find_dots')
@@ -204,7 +204,8 @@ def takeAPicture():
     return node
 
 def findCup():
-    findCupPhotoTargetPt = np.array([500, -160])
+    # findCupPhotoTargetPt = np.array([500, -160])
+    findCupPhotoTargetPt = np.array([400, -100])
     photoTargetPt = np.array([230, 230])
     deltaVec = findCupPhotoTargetPt - photoTargetPt
     print(deltaVec)
@@ -216,6 +217,44 @@ def findCup():
     node = FindCup('find_cup', deltaVec)
     rclpy.spin_once(node)
     return node
+
+step = 1
+def getTeaBag(placeX=230,placeY=230):
+    global step
+
+    startX, startY = 100, 500
+    height = 160
+
+    oneStepSize = 30
+    distance = step*oneStepSize
+    toX, toY = startX + distance, startY + distance
+
+    avoidHitHeight = 500
+
+    forword = 20
+    placeHeight = 300
+
+    theta = 40  # degree
+
+    move(startX,startY,height,-180,0,135)                            # position 1 : preparing to grab tea bag
+
+    move(toX,toY,height,-180,0,135)            # position 2 : foward into line
+
+    move(toX,toY,height,-180,0,135)            # position 3 : upward
+
+    move(toX,toY,height,-180,0,135)            # position 4 : preparing to grab tea bag
+
+    move(toX,toY,height,-180,0,135)            # position 5 : preparing to grab tea bag
+
+
+    move(placeX,placeY,avoidHitHeight,-180,0,135)
+    move(placeX,placeY,placeHeight,-180,0,135)
+    move(placeX+forword,placeY+forword,placeHeight,-180,0,135)
+    move(placeX+forword,placeY+forword,placeHeight,-180+theta,0,135)
+
+    step += 1
+    return 
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -236,23 +275,56 @@ def main(args=None):
     # move(endX+deltaXY,endY-deltaXY,150+deltaZ,-60,180,225)
 
 
-    _open()
+    # _open()
+
+    _close()
+    # node = findCup()
+    # print(node.circle_x,node.circle_y)
+
+    circleX , circleY = 381.08205 , 100.73405000000002
+    
     node = takeAPicture()
+
+    # lieDownAndGrab(200,400,300,300,"glass")
+    # getTeaBag()
+
+    # Pouring(endX=circleX,endY=circleY)
+    # move(circleX,circleY,170,-90,180,225)
+
 
     # # pour pot
     # print(node.blue, node.red, node.green)
+    # GREEN, RED, DIST = None, None, None
     # for green in node.green:
     #     for red in node.red:
     #         dist = math.sqrt((green[0]-red[0])**2 + (green[1]-red[1])**2)
     #         print("dist",dist)
-    #         if dist >= 180 and dist <= 250:
-    #             # metal one
-    #             PourPot(green, red, "metal")
-    #             return
-            # if dist >= 100 and dist < 180:
-            #     # glass one
-            #     PourPot(blue, red, "glass")
-            #     return 
+    #         if dist >= 100 and dist < 180:
+    #             # glass one
+    #             PourPot(green, red, "glass")
+    #             # GREEN = green
+    #             # RED = red
+    #             # DIST = dist
+    #             break
+    
+    # node = findCup()
+
+    # move(node.circle_x,node.circle_y,300)
+    
+
+    # print(GREEN,RED,DIST)
+
+    # assert GREEN != None
+
+    # toPutTeaBagX, toPutTeaBagY = RED[0]*0.7 + GREEN[0]*0.3, RED[1]*0.7 + GREEN*0.3
+
+    # getTeaBag(toPutTeaBagX,toPutTeaBagY)
+
+    # moveTo(photoTarget)
+
+    # Pouring(GREEN,RED,"glass")
+
+
 
     # assignment4
 
