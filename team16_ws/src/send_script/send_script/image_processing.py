@@ -11,7 +11,6 @@ def CalcCentroid(img):
     for c in contours:
         area = cv2.contourArea(c)
         areas.append(area)
-        print("area=", area)
         (x, y), (width, height), pa = cv2.minAreaRect(c)
         if width <= height:
             pa += 90

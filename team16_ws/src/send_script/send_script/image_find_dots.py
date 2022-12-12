@@ -28,30 +28,30 @@ def FindColorDots(img):
             continue
         newx = tm[0][0] * x + tm[0][1] * y + tm[0][2]
         newy = tm[1][0] * x + tm[1][1] * y + tm[1][2]
-        x = (newx-288)*0.9125 + 285
-        y = (newy-285)*0.9125 + 285
-        blue_dots.append((x, y))
+        blue_dots.append((newx, newy))
         
-    lower_red = np.array([0, 65, 65])
+    lower_red = np.array([0, 40, 65])
     upper_red = np.array([10, 255, 255])
-    mask_red = cv2.inRange(imghsv, lower_red, upper_red)
+    mask_red1 = cv2.inRange(imghsv, lower_red, upper_red)
+    lower_red = np.array([175, 40, 65])
+    upper_red = np.array([180, 255, 255])
+    mask_red2 = cv2.inRange(imghsv, lower_red, upper_red)
+    mask_red = mask_red1 | mask_red2
     contours, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     red_dots = []
     for c in contours:
         area = cv2.contourArea(c)
-        # print("red dot area",area)
         if area <= 100 or area >= 800:
             continue
+        # print("red dot area",area)
         (x, y), (width, height), pa = cv2.minAreaRect(c)
         if area/width/height <= 0.6:
             continue
         newx = tm[0][0] * x + tm[0][1] * y + tm[0][2]
         newy = tm[1][0] * x + tm[1][1] * y + tm[1][2]
-        x = (newx-288)*0.9125 + 285
-        y = (newy-285)*0.9125 + 285
-        red_dots.append((x, y))
+        red_dots.append((newx, newy))
 
-    lower_green = np.array([40, 70, 70])
+    lower_green = np.array([40, 40, 70])
     upper_green = np.array([80, 255, 255])
     mask_green = cv2.inRange(imghsv, lower_green, upper_green)
     contours, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -61,15 +61,13 @@ def FindColorDots(img):
         
         if area <= 100 or area >= 800:
             continue
-        # print("green dot area",area)
         (x, y), (width, height), pa = cv2.minAreaRect(c)
         if area/width/height <= 0.6:
             continue
+        print("green dot",area,x,y)
         newx = tm[0][0] * x + tm[0][1] * y + tm[0][2]
         newy = tm[1][0] * x + tm[1][1] * y + tm[1][2]
-        x = (newx-288)*0.9125 + 285
-        y = (newy-285)*0.9125 + 285
-        green_dots.append((x, y))
+        green_dots.append((newx, newy))
 
     return blue_dots, red_dots, green_dots
         
@@ -88,7 +86,7 @@ class FindDots(Node):
         bridge = cv_bridge.CvBridge()
         img = bridge.imgmsg_to_cv2(data, data.encoding)
 
-        k = cv2.imwrite('./output/color/dist_fail_1.jpg', img)
+        k = cv2.imwrite('./output/???', img)
 
         areas, xs, ys, angles = CalcCentroid(img)
         
@@ -103,4 +101,3 @@ class FindDots(Node):
         self.areas, self.oxs, self.oys, self.oas = areas, oxs, oys, oas
 
         self.blue, self.red, self.green = FindColorDots(img)
-
