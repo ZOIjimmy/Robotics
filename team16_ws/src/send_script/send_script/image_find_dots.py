@@ -64,7 +64,6 @@ def FindColorDots(img):
         (x, y), (width, height), pa = cv2.minAreaRect(c)
         if area/width/height <= 0.6:
             continue
-        print("green dot",area,x,y)
         newx = tm[0][0] * x + tm[0][1] * y + tm[0][2]
         newy = tm[1][0] * x + tm[1][1] * y + tm[1][2]
         green_dots.append((newx, newy))
@@ -86,7 +85,7 @@ class FindDots(Node):
         bridge = cv_bridge.CvBridge()
         img = bridge.imgmsg_to_cv2(data, data.encoding)
 
-        k = cv2.imwrite('./output/???', img)
+        # k = cv2.imwrite('./output/???', img)
 
         areas, xs, ys, angles = CalcCentroid(img)
         
@@ -101,3 +100,4 @@ class FindDots(Node):
         self.areas, self.oxs, self.oys, self.oas = areas, oxs, oys, oas
 
         self.blue, self.red, self.green = FindColorDots(img)
+        print(self.red, self.green)

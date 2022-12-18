@@ -23,9 +23,18 @@ class FindCup(Node):
         img = bridge.imgmsg_to_cv2(data, data.encoding)
         k = cv2.imwrite('./output/cup/cup.jpg', img)
 
+        # crop image
+        crop_y_start, crop_x_start = 0, 400
+        print(img.shape)
+        # [0~960, 0~1280]
+        img = img[crop_y_start:900, crop_x_start:900]
+        print(img[0, 0])
+        print(img.shape)
+
+
         # process image
         processImg = img.copy()
-        processImg = cv2.cvtColor(processImg, cv2.COLOR_BGR2GRAY) 
+        processImg = cv2.cvtColor(processImg, cv2.COLOR_BGR2GRAY)
         processImg = cv2.GaussianBlur(processImg, (5, 5), 0)
 
         # detect circle
@@ -38,8 +47,8 @@ class FindCup(Node):
             for (x, y, r) in circles:
                 cv2.circle(processImg, (x, y), r, (0, 255, 0), 4)
                 cv2.rectangle(processImg, (x-5, y-5), (x + 5, y + 5), (0, 128, 255), -1)
-            
-        
+
+
         k = cv2.imwrite('./output/cup/cup_processed.jpg', processImg)
 
         print(circles.size)
@@ -48,7 +57,7 @@ class FindCup(Node):
 
         cupPos = circles[0]
         print("cupPos", cupPos[0], cupPos[1])
-        (cupX, cupY) = uv2xyTrans(cupPos[0], cupPos[1])
+        (cupX, cupY) = uv2xyTrans(cupPos[0] + crop_x_start, cupPos[1] + crop_y_start)
         print("cup world", cupX, cupY)
 
 
