@@ -12,29 +12,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _selectedTab = ValueNotifier(HomeTabs.menuList);
 
-  List<IconData> tapIcons = [
-    Icons.home_rounded,
-    Icons.explore_rounded,
-    Icons.shopping_cart_rounded,
-    Icons.person_rounded
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return _buildScaffold();
+    return buildScaffold();
   }
 
-  Widget _buildScaffold() {
+  Widget buildScaffold() {
     return ValueListenableBuilder<HomeTabs>(
       valueListenable: _selectedTab,
       builder: (context, tab, _) {
         return Scaffold(
           backgroundColor: tab.getColor(),
           extendBody: true,
-          bottomNavigationBar: _buildBottomNavBar(),
+          bottomNavigationBar: buildBottomNavBar(),
           body: SafeArea(
             child: Column(
-              children: [Expanded(child: tab.getPage())],
+              children: [
+                Expanded(child: tab.getPage()),
+                const SizedBox(height: 30)
+              ],
             ),
           ),
         );
@@ -42,7 +38,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBottomNavBar() {
+  Widget buildBottomNavBar() {
     return CurvedNavigationBar(
       backgroundColor: Colors.transparent,
       items: const <Widget>[
@@ -50,7 +46,6 @@ class _HomePageState extends State<HomePage> {
         Icon(Icons.list, size: 30),
       ],
       onTap: (index) {
-        //Handle button tap
         _selectedTab.value = HomeTabs.values[index];
       },
     );

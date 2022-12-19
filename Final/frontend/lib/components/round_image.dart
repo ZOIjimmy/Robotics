@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class CustomImage extends StatelessWidget {
   const CustomImage(this.name,
-      {this.width = 100,
+      {super.key,
+      this.width = 100,
       this.height = 100,
       this.bgColor,
       this.borderWidth = 0,
@@ -35,7 +36,7 @@ class CustomImage extends StatelessWidget {
             color: Colors.black.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 1,
-            offset: Offset(1, 2), // changes position of shadow
+            offset: const Offset(1, 2), // changes position of shadow
           ),
         ],
         image: DecorationImage(image: NetworkImage(name), fit: BoxFit.cover),

@@ -5,14 +5,15 @@ class EmptyCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Center(
+        child: Column(
       children: [
-        Image.asset('assets/images/empty_cart.png'),
+        Image.asset('assets/empty-cart.png'),
         const Text(
           "Empty cart",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         )
       ],
-    );
+    ));
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/home/cart/cart_page.dart';
-import 'package:frontend/screens/home/menu_page.dart';
+import 'package:frontend/screens/home/menu/menu_page.dart';
 
 enum HomeTabs {
   menuList,

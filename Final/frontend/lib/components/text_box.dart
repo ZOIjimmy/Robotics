@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CustomTextBox extends StatelessWidget {
-  CustomTextBox(
+  const CustomTextBox(
       {Key? key, this.hint = "", this.prefix, this.suffix, this.controller})
       : super(key: key);
   final String hint;
@@ -12,7 +12,7 @@ class CustomTextBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      padding: EdgeInsets.only(bottom: 3),
+      padding: const EdgeInsets.only(bottom: 3),
       height: 44,
       decoration: BoxDecoration(
           color: Colors.white,
@@ -25,7 +25,7 @@ class CustomTextBox extends StatelessWidget {
             suffixIcon: suffix,
             border: InputBorder.none,
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.black, fontSize: 15)),
+            hintStyle: const TextStyle(color: Colors.black, fontSize: 15)),
       ),
     );
   }

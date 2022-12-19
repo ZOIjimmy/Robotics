@@ -1,73 +1,49 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/data/model/product.dart';
+import 'package:frontend/data/service/local_data.dart';
 import 'package:frontend/screens/home/cart/empty_cart.dart';
+import 'package:get_it/get_it.dart';
 
 // final ProductController controller = Get.put(ProductController());
 
 class CartPage extends StatelessWidget {
   CartPage({Key? key}) : super(key: key);
 
-  // TODO:
-  final bool is_empty = true;
+  final LocalDataStore localDataStore = GetIt.instance.get<LocalDataStore>();
 
   @override
   Widget build(BuildContext context) {
+    final List<Map> data = localDataStore.getOrders();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           flex: 10,
-          child: is_empty ? buildCartListView() : const EmptyCart(),
+          child: data.isEmpty ? const EmptyCart() : buildCartListView(data),
         ),
-        buildBottomBarTitle(),
-        buildBottomBarButton()
+        // buildBottomBarTitle(),
       ],
     );
   }
 
   PreferredSizeWidget buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text(
-        "My cart",
-        // TODO:
-        // style: Theme.of(context).textTheme.headline1,
-      ),
+      title: const Text("My cart"),
     );
   }
 
-  //TODO:
-  final List<Product> productList = [
-    Product(
-        name: "name",
-        price: 300,
-        about: "about",
-        isAvailable: true,
-        off: 0,
-        quantity: 10,
-        images: [""],
-        isLiked: false,
-        rating: 3.0,
-        type: ProductType.mobile),
-    Product(
-        name: "name",
-        price: 300,
-        about: "about",
-        isAvailable: true,
-        off: 0,
-        quantity: 10,
-        images: [""],
-        isLiked: false,
-        rating: 3.0,
-        type: ProductType.mobile),
-  ];
-
-  Widget buildCartListView() {
+  Widget buildCartListView(List<Map> productList) {
     return ListView.builder(
       shrinkWrap: true,
       padding: const EdgeInsets.all(20),
       itemCount: productList.length,
       itemBuilder: (_, index) {
-        Product product = productList[index];
+        Product product = productList[index]['product'];
+        int size = int.parse(productList[index]['size']);
+        int sugar = int.parse(productList[index]['sugar']);
+        int milk = int.parse(productList[index]['milk']);
         return Container(
           margin: const EdgeInsets.only(bottom: 20),
           padding: const EdgeInsets.all(15),
@@ -84,11 +60,11 @@ class CartPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     color: Colors.amber),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      product.images[0],
+                    child: CachedNetworkImage(
+                      imageUrl: product.image,
                       width: 70,
                       height: 120,
                       fit: BoxFit.contain,
@@ -110,19 +86,10 @@ class CartPage extends StatelessWidget {
                           fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                     Text(
-                      //TODO:
-                      "20",
+                      "水量：$size  糖量：$sugar  牛奶量：$milk",
                       style: TextStyle(
                           color: Colors.black.withOpacity(0.5),
                           fontWeight: FontWeight.w400),
-                    ),
-                    Text(
-                      "price",
-                      // controller.isPriceOff(product)
-                      //     ? "\$${product.off}"
-                      //     : "\$${product.price}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w900, fontSize: 23),
                     ),
                   ],
                 ),
@@ -134,35 +101,22 @@ class CartPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
                 child: Row(
                   children: [
-                    IconButton(
-                      splashRadius: 10.0,
-                      onPressed: () => {}, //TODO:
-                      icon: const Icon(
-                        Icons.remove,
-                        color: Color(0xFFEC6813),
-                      ),
-                    ),
-                    // GetBuilder<ProductController>(
-                    //   builder: (ProductController controller) {
-                    //     return AnimatedSwitcherWrapper(
-                    //       child: Text(
-                    //         '${controller.cartProducts[index].quantity}',
-                    //         key: ValueKey<int>(
-                    //             controller.cartProducts[index].quantity),
-                    //         style: const TextStyle(
-                    //             fontSize: 18, fontWeight: FontWeight.w700),
-                    //       ),
-                    //     );
-                    //   },
+                    // IconButton(
+                    //   splashRadius: 10.0,
+                    //   onPressed: () => {}, //TODO:
+                    //   icon: const Icon(
+                    //     Icons.remove,
+                    //     color: Color(0xFFEC6813),
+                    //   ),
                     // ),
-                    IconButton(
-                      splashRadius: 10.0,
-                      onPressed: () => {}, // TODO:
-                      icon: const Icon(
-                        Icons.add,
-                        color: Color(0xFFEC6813),
-                      ),
-                    ),
+                    // IconButton(
+                    //   splashRadius: 10.0,
+                    //   onPressed: () => {}, // TODO:
+                    //   icon: const Icon(
+                    //     Icons.add,
+                    //     color: Color(0xFFEC6813),
+                    //   ),
+                    // ),
                   ],
                 ),
               )
@@ -173,47 +127,19 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget buildBottomBarTitle() {
-    return Expanded(
-      flex: 1,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text("Total",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400)),
-            // Obx(() {
-            //   return AnimatedSwitcherWrapper(
-            //     child: Text(
-            //       "\$${controller.totalPrice.value}",
-            //       key: ValueKey<int>(controller.totalPrice.value),
-            //       style: const TextStyle(
-            //         fontSize: 25,
-            //         fontWeight: FontWeight.w900,
-            //         color: Color(0xFFEC6813),
-            //       ),
-            //     ),
-            //   );
-            // })
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildBottomBarButton() {
-    return Expanded(
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 30, right: 30, bottom: 20),
-          child: ElevatedButton(
-            child: const Text("Buy Now"),
-            onPressed: is_empty ? null : () {},
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget buildBottomBarTitle() {
+  //   return Expanded(
+  //     flex: 1,
+  //     child: Container(
+  //       padding: const EdgeInsets.symmetric(horizontal: 30),
+  //       child: Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: const [
+  //           Text("Total",
+  //               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400)),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 }

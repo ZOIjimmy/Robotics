@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/model/product.dart';
 
 class PopularItem extends StatelessWidget {
-  PopularItem({Key? key, required this.data, this.onTap}) : super(key: key);
-  final data;
+  const PopularItem({Key? key, required this.data, this.onTap})
+      : super(key: key);
+  final Product data;
   final GestureTapCallback? onTap;
 
   @override
@@ -10,7 +12,7 @@ class PopularItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(right: 15),
+        margin: const EdgeInsets.only(right: 15),
         height: 170, width: 220,
         // color: secondary,
         child: Stack(
@@ -23,17 +25,13 @@ class PopularItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   image: DecorationImage(
-                      fit: BoxFit.cover, image: NetworkImage(data["image"])),
+                      fit: BoxFit.cover, image: NetworkImage(data.image)),
                 ),
               ),
             ),
-            // Positioned(
-            //   top: 0, right: 5,
-            //   child: FavoriteBox(isFavorited: data["is_favorited"],)
-            // ),
             Positioned(
               top: 140,
-              child: Container(
+              child: SizedBox(
                   width: 220,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,17 +39,16 @@ class PopularItem extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                                child: Text(
-                              data["name"],
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w600),
-                            )),
-                            SizedBox(
-                              width: 5,
+                              child: Text(
+                                data.name,
+                                style: const TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
                             ),
+                            const SizedBox(width: 5),
                             Text(
-                              data["price"],
-                              style: TextStyle(
+                              data.price.toString(),
+                              style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600),

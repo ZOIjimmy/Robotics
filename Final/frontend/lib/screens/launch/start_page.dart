@@ -1,4 +1,5 @@
 import 'package:frontend/const/lottie_asset.dart';
+import 'package:frontend/screens/home/home_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/const/image_asset.dart';
@@ -39,18 +40,23 @@ class _StartPageState extends State<StartPage> with TickerProviderStateMixin {
       body: Center(
         child: Stack(
           alignment: Alignment.center,
-          children: [_buildOpacityImageLogo(), _buildLottie(context)],
+          children: [_buildOpacityImageLogo(context), _buildLottie(context)],
         ),
       ),
     );
-    // _buildLaunchEventListener()
   }
 
-  Widget _buildOpacityImageLogo() {
+  Widget _buildOpacityImageLogo(BuildContext context) {
     return AnimatedOpacity(
       opacity: _isAnimationEnd ? 1 : 0,
       duration: const Duration(milliseconds: 1000),
-      onEnd: () => {},
+      onEnd: () => {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
+        )
+      },
       child: Hero(
         tag: StartPage.tag,
         child: Image.asset(

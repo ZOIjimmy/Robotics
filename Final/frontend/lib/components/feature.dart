@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/round_image.dart';
+import 'package:frontend/data/model/product.dart';
 
 class FeaturedItem extends StatelessWidget {
   const FeaturedItem({Key? key, required this.data, this.onTap})
       : super(key: key);
-  final data;
+  final Product data;
   final GestureTapCallback? onTap;
 
   @override
@@ -30,69 +31,62 @@ class FeaturedItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CustomImage(
-              data["image"],
+              data.image,
               width: 60,
               height: 60,
               radius: 10,
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(data["name"],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  SizedBox(
-                    height: 3,
+                  Text(
+                    data.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                  Text(data["sources"],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  SizedBox(
-                    height: 4,
+                  const SizedBox(height: 3),
+                  Text(
+                    data.sources,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
+                  const SizedBox(height: 4),
                   Row(
-                    children: [
+                    children: const [
                       Icon(
                         Icons.star_rounded,
                         size: 14,
                         color: Colors.amber,
-                      ),
-                      SizedBox(
-                        width: 2,
-                      ),
-                      Text(data["rate"] + " (" + data["rate_number"] + ")",
-                          style: TextStyle(fontSize: 12, color: Colors.amber)),
+                      )
                     ],
                   )
                 ],
               ),
             ),
-            Column(
-              children: <Widget>[
-                Text(data["price"],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.amber)),
-                SizedBox(
-                  height: 10,
-                ),
-                // FavoriteBox(
-                //   iconSize: 13,
-                //   isFavorited: data["is_favorited"],
-                // )
-              ],
-            ),
+            buildPrice(),
           ],
         ),
       ),
+    );
+  }
+
+  Column buildPrice() {
+    return Column(
+      children: <Widget>[
+        Text(
+          "\$${data.price}",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w500, color: Colors.amber),
+        ),
+        const SizedBox(height: 10)
+      ],
     );
   }
 }
