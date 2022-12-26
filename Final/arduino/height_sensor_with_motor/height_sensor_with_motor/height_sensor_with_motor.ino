@@ -1,8 +1,8 @@
 int motor1pin1 = 3;
 int motor1pin2 = 2;
 
-int Trig = 12;
-int Echo = 13;
+int Trig = 13;
+int Echo = 12;
 
 const int BUTTON_PIN = 7;  // 按鍵的接腳
 int buttonState = 0;   // 按鈕的狀態
