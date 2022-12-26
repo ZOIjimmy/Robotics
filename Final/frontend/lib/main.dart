@@ -7,6 +7,8 @@ import 'package:frontend/my_app.dart';
 void main() async {
   Environment(baseConfig: LocalConfig());
 
+  WidgetsFlutterBinding.ensureInitialized();
+
   await setupService();
 
   runApp(const MyApp());

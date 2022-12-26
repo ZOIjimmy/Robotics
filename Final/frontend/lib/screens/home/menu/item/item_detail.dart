@@ -61,7 +61,7 @@ class _ItemPageState extends State<ItemPage> {
   Widget buildSlider(String title, Color color, double valueState,
       void Function(dynamic)? onChange) {
     return Padding(
-      padding: const EdgeInsets.all(30.0),
+      padding: const EdgeInsets.all(10.0),
       child: Container(
         width: 150,
         decoration: BoxDecoration(
@@ -89,8 +89,10 @@ class _ItemPageState extends State<ItemPage> {
   }
 
   Widget buildCustomizeSliders() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      // mainAxisAlignment: MainAxisAlignment.center,
+      alignment: WrapAlignment.center,
+      runAlignment: WrapAlignment.center,
       children: [
         buildSlider("水量", const Color(0xFFEB455F), _sizeSliderValue,
             (dynamic value) {

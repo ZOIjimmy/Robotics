@@ -29,19 +29,10 @@ class MenuPage extends StatelessWidget {
       automaticallyImplyLeading: false,
       elevation: 0,
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Container(
-              alignment: Alignment.centerLeft,
-              child: const Icon(
-                Icons.clear_all_rounded,
-                size: 28,
-              ),
-            ),
-          ),
-          const NotificationBox(
+        children: const [
+          NotificationBox(
             number: 0,
           )
         ],
@@ -122,7 +113,10 @@ class MenuPage extends StatelessWidget {
   Widget buildPopulars() {
     final LocalDataStore _localdata = GetIt.instance.get<LocalDataStore>();
 
-    final List<Product> recent = [productList[0]];
+    final List<Map> data = _localdata.getOrders();
+    final Product product =
+        data.isNotEmpty ? data[data.length - 1]['product'] : productList[0];
+    final List<Product> recent = [product];
 
     return SizedBox(
       child: SingleChildScrollView(

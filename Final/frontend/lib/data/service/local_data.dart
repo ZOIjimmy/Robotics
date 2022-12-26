@@ -39,4 +39,8 @@ class LocalDataStore {
       });
     }));
   }
+
+  Future<void> clearOrder() async {
+    await _prefs.setStringList(_keyOrders, []);
+  }
 }

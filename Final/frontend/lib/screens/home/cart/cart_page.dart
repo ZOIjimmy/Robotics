@@ -7,24 +7,50 @@ import 'package:get_it/get_it.dart';
 
 // final ProductController controller = Get.put(ProductController());
 
-class CartPage extends StatelessWidget {
-  CartPage({Key? key}) : super(key: key);
+class CartPage extends StatefulWidget {
+  const CartPage({Key? key}) : super(key: key);
+
+  @override
+  CartPageState createState() => CartPageState();
+}
+
+class CartPageState extends State<CartPage> {
+// class CartPage extends StatelessWidget {
+  // CartPage({Key? key}) : super(key: key);
 
   final LocalDataStore localDataStore = GetIt.instance.get<LocalDataStore>();
+  List<Map> data = [];
+  @override
+  void initState() {
+    data = localDataStore.getOrders();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map> data = localDataStore.getOrders();
+    // final List<Map> data = localDataStore.getOrders();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 10,
-          child: data.isEmpty ? const EmptyCart() : buildCartListView(data),
-        ),
-        // buildBottomBarTitle(),
-      ],
+    return Scaffold(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 10,
+            child: data.isEmpty ? const EmptyCart() : buildCartListView(data),
+          ),
+          // buildBottomBarTitle(),
+        ],
+      ),
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await localDataStore.clearOrder();
+          setState(() {
+            data = localDataStore.getOrders();
+          });
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.delete),
+      ),
     );
   }
 

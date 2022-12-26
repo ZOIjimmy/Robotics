@@ -1,12 +1,14 @@
 import serial
-BTserial = serial.Serial('/dev/ttys003', 9600)
+BTserial = serial.Serial('/dev/ttys020', 9600)
 print(BTserial.name)
 BTserial.flushInput()
 
 print(BTserial.writable())
-BTserial.write(b'12;')
+# BTserial.write(b'12;')
 
-print(BTserial.readline())
+while(True):
+    print(BTserial.readline())
+    
 BTserial.close()
 
 
