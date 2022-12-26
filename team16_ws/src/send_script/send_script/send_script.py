@@ -7,6 +7,7 @@ import numpy as np
 import socket
 import rclpy
 import time
+import random
 import math
 import cv2
 import sys
@@ -22,48 +23,98 @@ from .sensor_data_read import getHeightData, turnAngle, resetTurnAngle, giveSuga
 
 from .height_sensor import calculateTurnAngle
 
+user_size = 0
+user_milk = 0
+user_sugar = 0
+
 def main(args=None):
     rclpy.init(args=args)
-
     # Connection
-    # client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # client.connect(('140.112.30.40', 13751))
-    # order = eval(str(client.recv(1024), encoding='utf-8'))
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(('140.112.30.40', 13751))
+    order = eval(str(client.recv(1024), encoding='utf-8'))
+    print(order)
 
-    # take a picture at photoTarget
+    global user_size, user_milk, user_sugar
+
+
+    user_size = int(order['size'])
+    user_size = user_size//10
+    user_sugar = int(order['sugar'])
+    user_milk = int(order['milk'])
+    user_milk = user_milk//10
+
+
+    # # take a picture at photoTarget
     node = takeAPicture()
 
-    # find tools
-    # tools = findTool(node)
+    # targetCup = 230,230,230
 
-    # find glass teapot
-    # green, red = findPot(node, "glass")
+    # # find tools
+    tools = findTool(node)
+        
 
-    # Cup Detection and Height Prediction
-    # cup_x, cup_y, cup_z_cm, cup_r = cupDetectionHeightPred()
+    # # find glass teapot
 
-    # height sensor
+    greenGlass, redGlass = findPot(node, "glass")
+    greenMetal, redMetal = findPot(node,"metal")
+    greenMilk, redMilk = findPot(node,"milk")
+
+    # # while tools == None or greenGlass == None or greenMetal == None or greenMilk==None:
+    # #     deltaXrange = 20
+    # #     deltaYrange = 20
+    # #     x = random.randrange(230-deltaXrange,230+deltaXrange)
+    # #     y = random.randrange(230-deltaYrange,230+deltaYrange)
+    # #     node = takeAPictureAt(x,y)
+    # #     tools = findTool(node)
+    # #     greenGlass, redGlass = findPot(node, "glass")
+    # #     greenMetal, redMetal = findPot(node,"metal")
+    # #     greenMilk, redMilk = findPot(node,"milk")
+
+    if tools == None or greenGlass == None or greenMetal == None or greenMilk==None:
+        return 
+
+
+
+    # # # Cup Detection and Height Prediction
+    cup_x, cup_y, cup_z_cm, cup_r = cupDetectionHeightPred()
+
+    # # # height sensor
     # turnHeightSensor(cup_x, cup_y)
 
-    # # get central of the glass teapot
-    # toPutTeaBagX, toPutTeaBagY = getDivision(green, red, 2.2, 7)
+    # # # # get central of the glass teapot
+    # toPutTeaBagX, toPutTeaBagY = getDivision(greenGlass, redGlass, 2.2, 7)
 
-    # # put the teabag to the central of the glass teapot
-    # #getTeaBag(tools[2][0],tools[2][1],toPutTeaBagX,toPutTeaBagY)
+    # # # # put the teabag to the central of the glass teapot
+    # getTeaBag(tools[2][0],tools[2][1],toPutTeaBagX,toPutTeaBagY)
     
     # targetTeaPot = toPutTeaBagX, toPutTeaBagY, 200
-    # #PourPot(node, "metal", targetTeaPot)
+    # PourPot(node, "metal", targetTeaPot)
 
     # targetCup = cup_x, cup_y, cup_z_cm*16
     # PourPot(node,"glass",targetCup)
 
-    # pour out teabag
-    # garbageCollection(green, red)
+    # # # # pour out teabag
+    # garbageCollection(greenGlass, redGlass)
 
-    # # addSugar(stickPositionX, stickPositionY, targetX, targetY, pourHeight)
-    # addSugar(tools[0][0], tools[0][1], cup_x, cup_y, cup_z_cm*10 + 100)
+    # PourPot(node,"milk", targetCup)
 
-    # #stir(tools[1], (cup_x,cup_y,160,cup_r))
+
+
+    # addSugar(tools[0][0], tools[0][1], cup_x, cup_y, cup_z_cm*10 + 100, user_sugar//10)
+
+    stir(tools[1], (cup_x,cup_y,160,cup_r))
+
+
+    # moveTo(photoTarget)
+
+    _close()
+    move(-90,360,450)
+    move(-90,360,160)
+    move(-90,360,150)
+    move(-90,360,160)
+    move(-90,360,150)
+    moveTo(photoTarget)
 
     # # PourPot(node,"milk",(230,230,300))            !!!!!cannot use now !!!!!
 
@@ -82,7 +133,7 @@ def garbageCollection(handle, tip):
 def stir(tool, cup):
     getStirStick(tool[0],tool[1])
     stirring(cup[0],cup[1],cup[2],cup[3])
-    putBackStirStick(tools[0],tools[1])
+    putBackStirStick(tool[0],tool[1])
 
 def turnHeightSensor(cup_x, cup_y):
     turn_angle = calculateTurnAngle(cup_x, cup_y)
@@ -113,7 +164,7 @@ def cupDetectionHeightPred():
     new_cup_x, new_cup_y = CalibrateCupPosition(cup_center_world_x, cup_center_world_y, cup_height)
     return new_cup_x, new_cup_y, cup_height, findcup_node.circle_r
 
-distMap = {"metal": (215, 245), "glass": (150, 180), "milk": (40, 58)}
+distMap = {"metal": (215, 245), "glass": (150, 180), "milk": (100, 110)}
 def findPot(node, material):
     tool_reds = findTool(node)
     for green in node.green:
@@ -122,12 +173,12 @@ def findPot(node, material):
             dist = math.sqrt((green[0]-red[0])**2 + (green[1]-red[1])**2)
             print("distance:",dist)
             if dist >= distMap[material][0] and dist < distMap[material][1]:
-                print('#'*50, "\nglass", green, red, '\n', '#'*50)
+                print('#'*50, "\n",material, green, red, '\n', '#'*50)
                 a = Calibrate(green[0], green[1], material)
                 b = Calibrate(red[0], red[1], material)
                 return a, b
-    print("oops glass")
-    exit(1)
+    print("oops {}".format(material))
+    # exit(1)
     return None, None
 
 tools = None
@@ -142,6 +193,8 @@ def findTool(node):
         print("tool_reds", tool_reds)
         print("ERROR")
         return None
+    else:
+        print("find {} tools".format(len(tool_reds)))
 
     a = tool_reds[0][0] - tool_reds[0][1]
     b = tool_reds[1][0] - tool_reds[1][1]
@@ -159,11 +212,17 @@ def findTool(node):
 
     return tool_reds       # [left,mid,right]
 
-heightMap = {"metal": 104.5, "glass": 58, "milk": 76 ,"sugarPlate": 230, "sifter":108}
-lengthMap = {"metal": 170, "glass": 128, "milk": 130, "sifter": 88}
+heightMap = {"metal": 104.5, "glass": 58, "milk": 88 ,"sugarPlate": 230, "sifter":108}
+lengthMap = {"metal": 175, "glass": 128, "milk": 132, "sifter": 88}
 def PourPot(node, material, target):
+
+    global user_size
+    global user_milk
+
     handle, tip = findPot(node, material)
     _open()
+
+    moveTo(photoTarget)
 
     endX, endY, endZ, l, deltaX, deltaY = lieDownAndGrab(tip[0], tip[1], handle[0], handle[1], material)
     original_position = [handle[0],handle[1],heightMap[material]]
@@ -171,9 +230,9 @@ def PourPot(node, material, target):
     if material == "metal":
         Pouring(target[0],target[1],target[2],315,material,deltaX,deltaY)
     elif material == "glass":
-        Pouring(target[0],target[1],target[2],240,material,deltaX,deltaY)
+        Pouring(target[0],target[1],target[2],240,material,deltaX,deltaY, pouringTheta = 40 + 2* user_size)
     elif material == "milk":
-        Pouring(target[0],target[1],target[2],130,material,deltaX,deltaY)
+        Pouring(target[0],target[1],target[2],170,material,deltaX,deltaY, pouringTheta = 30 + 1.5 * user_milk)
 
     moveBackAfterPouring(original_position,material)
 
@@ -196,14 +255,23 @@ def lieDownAndGrab(startX,startY,endX,endY,material="metal"):
     move(endX, endY, grabH, -90, 180, theta)
     
     lengthTowardTeaPot = 25
+    if material == "metal": 
+        lengthTowardTeaPot += 2
+    if material == "milk":
+        lengthTowardTeaPot += 3
+    if material == "glass":
+        lengthTowardTeaPot -= 5
+    
     endX -= (deltaX/abs(deltaX)) * lengthTowardTeaPot * abs(math.sin(theta*math.pi/180))
     endY -= (deltaY/abs(deltaY)) * lengthTowardTeaPot * abs(math.cos(theta*math.pi/180))
 
     move(endX, endY, grabH, -90, 180, theta)
     time.sleep(5)
     time.sleep(5)
+    time.sleep(5)
     _close()        # grab the handle
     time.sleep(5)   # wait and check if successfully grabbed
+    time.sleep(5)
     time.sleep(5)
 
     endZ = 250
@@ -223,13 +291,17 @@ def Pouring(endX,endY,endZ,l,material,deltaX=100,deltaY=-100,pouringTheta=45,SAM
     elif material == "glass":
         l = 280
         SAMPLE_POINTS = 9
+    elif material == "milk":
+        l = 100
+        SAMPLE_POINTS = 3
     else:
         l = 0
         SAMPLE_POINTS = 0
 
     theta = -90
     deltaTh = pouringTheta
-    deltaXY = (1-math.cos(deltaTh*math.pi/180))*l/math.sqrt(2)*1.2
+    print("pouringTheta:", pouringTheta)
+    deltaXY = (1-math.cos(deltaTh*math.pi/180))*l/math.sqrt(2)*1.22
     deltaZ = math.sin(deltaTh*math.pi/180)*l*0.95
     for j in range(SAMPLE_POINTS):
         i = j + 1
@@ -243,7 +315,7 @@ def Pouring(endX,endY,endZ,l,material,deltaX=100,deltaY=-100,pouringTheta=45,SAM
     # move(endX+deltaXY,endY-deltaXY,endZ+deltaZ,-90+deltaTh,180,225)   
 
     # wait and then turn to place teapot horizontally
-    time.sleep(5)
+    time.sleep(3)
 
     for j in range(2):
         i = j + 1
@@ -268,6 +340,15 @@ def Pouring(endX,endY,endZ,l,material,deltaX=100,deltaY=-100,pouringTheta=45,SAM
 
 def moveBackAfterPouring(original_position,material):
     # put down the teapot and then open
+
+    if material == "metal":
+        original_position[0] += 20
+        original_position[1] -= 20
+    if material == "milk":
+        original_position[0] += 5
+        original_position[1] -= 5
+
+
     length = lengthMap[material]*0.9
     original_position[0] -= length/(2**0.5)
     original_position[1] += length/(2**0.5)
@@ -275,9 +356,17 @@ def moveBackAfterPouring(original_position,material):
     move(original_position[0],original_position[1],400,-90,180,225)
     move(original_position[0],original_position[1],original_position[2],-90,180,225)
     _open()
-    move(original_position[0]+2,original_position[1]-2,original_position[2],-90,180,225)
-    move(original_position[0]-2,original_position[1]+2,original_position[2],-90,180,225)
-    move(original_position[0],original_position[1],original_position[2],-90,180,225)
+
+    # delta = 5
+    # SHAKETIME = 3
+    # for i in range(SHAKETIME):
+    #     move(original_position[0]+delta,original_position[1]+delta,original_position[2],-90,180,225)
+    #     move(original_position[0]-delta,original_position[1]-delta,original_position[2],-90,180,225)
+    #     move(original_position[0]-delta,original_position[1]+delta,original_position[2],-90,180,225)
+    #     move(original_position[0]+delta,original_position[1]-delta,original_position[2],-90,180,225)
+    #     move(original_position[0],original_position[1],original_position[2],-90,180,225)
+    #     _close()
+    #     _open()
 
     # move backward to leave the teapot handle
     backward = 50
@@ -344,6 +433,8 @@ def getTeaBag(toolX, toolY, placeX=230,placeY=230):
 
     # first move forward and then pour
     move(placeX+forword,placeY+forword,placeHeight,-180,0,135)
+    time.sleep(3)
+    time.sleep(3)
     move(placeX+forword,placeY+forword,placeHeight,-180+theta,0,135)
     step += 1
 
@@ -356,15 +447,15 @@ def getTeaBag(toolX, toolY, placeX=230,placeY=230):
 
     move(toolX,toolY,avoidHitHeight)
 
-def addSugar(stickPositionX, stickPositionY, targetX, targetY, pourHeight):
+def addSugar(stickPositionX, stickPositionY, targetX, targetY, pourHeight, sugarAmount):
     getSugarPlate(stickPositionX,stickPositionY)
-    getSugar(8)
+    getSugar(sugarAmount)
     pourSugar(targetX, targetY, pourHeight)
     putBackSugarPlate(stickPositionX, stickPositionY)
 
 def getSugarPlate(positionX, positionY):
     avoidHeight = 400
-    grabH = 118
+    grabH = 123
     _open()
 
     a,b,c = -180,0,-45
@@ -390,9 +481,10 @@ def getSugarPlate(positionX, positionY):
 
 def getSugar(count):
     global ser
-    move(410,550,235,-180,0,225)
+    moveH = 245
+    move(410,550,moveH,-180,0,225)
     time.sleep(3)
-    move(600,360,235,-180,0,225)
+    move(600,360,moveH,-180,0,225)
     time.sleep(3)
     time.sleep(3)
     _open()
@@ -442,13 +534,14 @@ def pourSugar(centroidX, centroidY, pourHeight):
     move(centroidX, centroidY, pourHeight,-90,180,225)
 
 def putBackSugarPlate(positionX, positionY):
+
     # change back grab state
     move(230,230,500,-90,180,225)
     move(330,630,400,-90,180,225)
     move(330,630,300,-90,180,225)
     move(430,530,300,-90,180,225)
-    move(430,530,132,-90,180,225)
-    move(530,430,132,-90,180,225)
+    move(430,530,140,-90,180,225)
+    move(530,430,140,-90,180,225)
 
     time.sleep(5)
     _open()
@@ -469,8 +562,13 @@ def putBackSugarPlate(positionX, positionY):
     move(410,550,235,-180,0,225)
     move(230,230,700)
 
+
+    # move(383.6,441.2,123)
+    positionX = 383.6
+    positionY = 441.2
+
     avoidHeight = 400
-    grabH = 118
+    grabH = 123
     a,b,c = -180,0,-45
 
     move(positionX,positionY,avoidHeight)
@@ -546,7 +644,7 @@ def putBackStirStick(positionX, positionY):
 
 def stirring(centroidX,centroidY,stirHeight,radius,turns=5):
     # reset stirring radius
-    radius = 13
+    radius = 10
     a,b,c = 90,0,120
     avoidHeight = 300
     offset =  120   # gripper length = 12cm
@@ -619,6 +717,20 @@ def takeAPicture():
     node = FindDots('find_dots')
     rclpy.spin_once(node)
     return node
+
+def takeAPictureAt(x,y):
+    findDotsPhotoTargetPt = np.array([x, y])
+    photoTargetPt = np.array([230, 230])
+    deltaVec = findDotsPhotoTargetPt - photoTargetPt
+    print(deltaVec)
+    findDotsPhotoTarget = str(findDotsPhotoTargetPt[0]) + ", " + str(findDotsPhotoTargetPt[1]) + ", 700, -180, 0, 135.00"
+    moveTo(findDotsPhotoTarget)
+    send_script("Vision_DoJob(job1)")
+    cv2.waitKey(1)
+    node = FindDots('find_dots', deltaDis = deltaVec)
+    rclpy.spin_once(node)
+    return node
+
 
 def _open():
     set_io(0.0)

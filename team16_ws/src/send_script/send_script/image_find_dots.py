@@ -71,10 +71,15 @@ def FindColorDots(img):
     return blue_dots, red_dots, green_dots
         
 class FindDots(Node):
-    def __init__(self, nodeName):
+    def __init__(self, nodeName, deltaDis = []):
         super().__init__(nodeName)
-        self.subscription = self.create_subscription(Image, 
-        'techman_image', self.image_callback, 10)
+        if deltaDis == []:
+            self.subscription = self.create_subscription(Image, 
+            'techman_image', self.image_callback, 10)
+        else:
+            self.deltaDis = deltaDis
+            self.subscription = self.create_subscription(Image, 
+            'techman_image', self.image_callback_with_deltaDis, 10)
         self.subscription
         self.areas, self.oxs, self.oys, self.oas = [], [], [], []
         self.blue, self.red, self.green = [], [], []
@@ -100,4 +105,40 @@ class FindDots(Node):
         self.areas, self.oxs, self.oys, self.oas = areas, oxs, oys, oas
 
         self.blue, self.red, self.green = FindColorDots(img)
+        print(self.red, self.green)
+
+        
+    def image_callback_with_deltaDis(self, data):
+        self.get_logger().info('Received image')
+
+        bridge = cv_bridge.CvBridge()
+        img = bridge.imgmsg_to_cv2(data, data.encoding)
+
+        # k = cv2.imwrite('./output/???', img)
+
+        areas, xs, ys, angles = CalcCentroid(img)
+        
+        tm = [[0.3410, -0.3493, 234.4492], [-0.3453, -0.3514, 687.1838], [0, 0, 1]]
+        # tm = [[0.34475, -0.3539, 253.5828], [-0.3455, -0.35017, 687.6978], [0, 0, 1]]
+
+        oxs, oys, oas = [], [], []
+        for x, y, angle in zip(xs, ys, angles):
+            oxs.append(tm[0][0] * x + tm[0][1] * y + tm[0][2] + self.deltaDis[0])
+            oys.append(tm[1][0] * x + tm[1][1] * y + tm[1][2] + self.deltaDis[1])
+            oas.append(135 + 90 - angle)
+        self.areas, self.oxs, self.oys, self.oas = areas, oxs, oys, oas
+
+        self.blue, self.red, self.green = FindColorDots(img)
+
+        print(self.blue)
+
+        for i in range(len(self.blue)):
+            self.blue[i] = self.blue[i][0] + self.deltaDis[0], self.blue[i][1] + self.deltaDis[1]
+
+        for i in range(len(self.red)):
+            self.red[i] = self.red[i][0] + self.deltaDis[0], self.red[i][1] + self.deltaDis[1]
+        
+        for i in range(len(self.green)):
+            self.green[i] = self.green[i][0] + self.deltaDis[0], self.green[i][1] + self.deltaDis[1]
+
         print(self.red, self.green)
